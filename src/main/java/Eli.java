@@ -3,6 +3,8 @@ import java.util.Scanner;
 public class Eli {
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
+        String[] arr = new String[100];
+        int count = 0;
         String banner = " _______     _           _____ \n"
                 + "|  _____|   | |         |_   _|\n"
                 + "| |___      | |           | |  \n"
@@ -16,7 +18,21 @@ public class Eli {
                         "\n____________________________________________________________\n");
 
         for(String s = input.next(); !s.equals("bye") && !s.equals("再见"); s = input.next()){
-            System.out.println(s);
+            String list = "";
+
+            if(s.equals("list")) {
+                for(int i = 0; arr[i] != null; i++) {
+                    list += i+1 + ". " + arr[i] + "\n";
+                }
+                System.out.println(list);
+
+            }
+            else {
+                System.out.printf("added: %s%n", s);
+
+                arr[count] = s;
+                count++;
+            }
         }
         System.out.println( "Bye. 记得来找我\n"+
                 "____________________________________________________________");
