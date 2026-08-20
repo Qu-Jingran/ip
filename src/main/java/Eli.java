@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /** Runs the Eli task-list application. */
@@ -7,8 +8,7 @@ public class Eli {
     /** Reads commands and manages the user's task list. */
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
-        Task[] tasks = new Task[100];
-        int taskCount = 0;
+        ArrayList<Task> tasks = new ArrayList<>();
 
         printWelcome();
 
@@ -18,7 +18,7 @@ public class Eli {
             if (command.equals("bye") || command.equals("再见")) {
                 break;
             } else if (command.equals("list")) {
-                printList(tasks, taskCount);
+                printList(tasks);
             } else if (command.equals("todo")) {
                 printError("OOPS!!! The description of a todo cannot be empty.");
             } else if (command.startsWith("todo ")) {
@@ -26,8 +26,9 @@ public class Eli {
                 if (description.isEmpty()) {
                     printError("OOPS!!! The description of a todo cannot be empty.");
                 } else {
-                    tasks[taskCount] = new Todo(description);
-                    printAddedTask(tasks[taskCount], ++taskCount);
+                    Task task = new Todo(description);
+                    tasks.add(task);
+                    printAddedTask(task, tasks.size());
                 }
             } else if (command.equals("deadline")) {
                 printError("OOPS!!! The description of a deadline cannot be empty.");
@@ -45,8 +46,9 @@ public class Eli {
                     } else if (by.isEmpty()) {
                         printError("OOPS!!! A deadline needs a /by value.");
                     } else {
-                        tasks[taskCount] = new Deadline(description, by);
-                        printAddedTask(tasks[taskCount], ++taskCount);
+                        Task task = new Deadline(description, by);
+                        tasks.add(task);
+                        printAddedTask(task, tasks.size());
                     }
                 }
             } else if (command.equals("event")) {
@@ -69,23 +71,32 @@ public class Eli {
                     } else if (from.isEmpty() || to.isEmpty()) {
                         printError("OOPS!!! An event needs /from and /to values.");
                     } else {
-                        tasks[taskCount] = new Event(description, from, to);
-                        printAddedTask(tasks[taskCount], ++taskCount);
+                        Task task = new Event(description, from, to);
+                        tasks.add(task);
+                        printAddedTask(task, tasks.size());
                     }
                 }
             } else if (command.startsWith("mark ")) {
                 int taskNumber = parseTaskNumber(command.substring(5));
-                if (isValidTaskNumber(taskNumber, taskCount)) {
-                    tasks[taskNumber - 1].markAsDone();
-                    printTaskStatus("Nice! I've marked this task as done:", tasks[taskNumber - 1]);
+                if (isValidTaskNumber(taskNumber, tasks.size())) {
+                    tasks.get(taskNumber - 1).markAsDone();
+                    printTaskStatus("Nice! I've marked this task as done:", tasks.get(taskNumber - 1));
                 } else {
                     printTaskNumberError();
                 }
             } else if (command.startsWith("unmark ")) {
                 int taskNumber = parseTaskNumber(command.substring(7));
-                if (isValidTaskNumber(taskNumber, taskCount)) {
-                    tasks[taskNumber - 1].markAsNotDone();
-                    printTaskStatus("OK, I've marked this task as not done yet:", tasks[taskNumber - 1]);
+                if (isValidTaskNumber(taskNumber, tasks.size())) {
+                    tasks.get(taskNumber - 1).markAsNotDone();
+                    printTaskStatus("OK, I've marked this task as not done yet:", tasks.get(taskNumber - 1));
+                } else {
+                    printTaskNumberError();
+                }
+            } else if (command.startsWith("delete ")) {
+                int taskNumber = parseTaskNumber(command.substring(7));
+                if (isValidTaskNumber(taskNumber, tasks.size())) {
+                    Task removedTask = tasks.remove(taskNumber - 1);
+                    printDeletedTask(removedTask, tasks.size());
                 } else {
                     printTaskNumberError();
                 }
@@ -110,11 +121,11 @@ public class Eli {
     }
 
     /** Prints all tasks in the list. */
-    private static void printList(Task[] tasks, int taskCount) {
+    private static void printList(ArrayList<Task> tasks) {
         System.out.println(DIVIDER);
         System.out.println("Here are the tasks in your list:");
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println((i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println((i + 1) + "." + tasks.get(i));
         }
         System.out.println(DIVIDER);
     }
@@ -123,6 +134,15 @@ public class Eli {
     private static void printAddedTask(Task task, int taskCount) {
         System.out.println(DIVIDER);
         System.out.println("Got it. I've added this task:");
+        System.out.println("  " + task);
+        System.out.println("Now you have " + taskCount + " tasks in the list.");
+        System.out.println(DIVIDER);
+    }
+
+    /** Prints a confirmation after a task is deleted. */
+    private static void printDeletedTask(Task task, int taskCount) {
+        System.out.println(DIVIDER);
+        System.out.println("Noted. I've removed this task:");
         System.out.println("  " + task);
         System.out.println("Now you have " + taskCount + " tasks in the list.");
         System.out.println(DIVIDER);
