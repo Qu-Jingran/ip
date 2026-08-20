@@ -35,6 +35,8 @@ public class Eli {
                 int byIndex = command.indexOf(" /by ");
                 if (byIndex == -1) {
                     printError("OOPS!!! A deadline needs a /by value.");
+                } else if (byIndex <= 9) {
+                    printError("OOPS!!! The description of a deadline cannot be empty.");
                 } else {
                     String description = command.substring(9, byIndex).trim();
                     String by = command.substring(byIndex + 5).trim();
@@ -53,6 +55,10 @@ public class Eli {
                 int fromIndex = command.indexOf(" /from ");
                 int toIndex = command.indexOf(" /to ");
                 if (fromIndex == -1 || toIndex == -1 || fromIndex > toIndex) {
+                    printError("OOPS!!! An event needs /from and /to values.");
+                } else if (fromIndex <= 6) {
+                    printError("OOPS!!! The description of an event cannot be empty.");
+                } else if (toIndex < fromIndex + 7) {
                     printError("OOPS!!! An event needs /from and /to values.");
                 } else {
                     String description = command.substring(6, fromIndex).trim();
