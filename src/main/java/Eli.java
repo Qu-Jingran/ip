@@ -1,5 +1,8 @@
+import java.util.Scanner;
+
 public class Eli {
     public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
         String banner = " _______     _           _____ \n"
                 + "|  _____|   | |         |_   _|\n"
                 + "| |___      | |           | |  \n"
@@ -9,9 +12,13 @@ public class Eli {
         System.out.println(banner);
         System.out.println("____________________________________________________________\n" +
                         "Hello! I'm Eli.\n" +
-                        "What can I do for you?\n" +
-                        "\n____________________________________________________________\n" +
-                        "Bye. Hope to see you again soon!\n" +
+                        "你需要什么帮助？\n" +
+                        "\n____________________________________________________________\n");
+
+        for(String s = input.next(); !s.equals("bye") && !s.equals("再见"); s = input.next()){
+            System.out.println(s);
+        }
+        System.out.println( "Bye. 记得来找我\n"+
                 "____________________________________________________________");
 
     }
