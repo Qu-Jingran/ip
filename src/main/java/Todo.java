@@ -8,11 +8,6 @@ public class Todo extends Task {
      * @param description the task description
      */
     public Todo(String description) {
-        super(description);
-    }
-
-    @Override
-    protected String getTypeIcon() {
-        return "T";
+        super(description, TaskType.TODO);
     }
 }

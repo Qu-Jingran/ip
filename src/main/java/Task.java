@@ -4,15 +4,18 @@
  */
 public abstract class Task {
     private final String description;
+    private final TaskType taskType;
     private boolean isDone;
 
     /**
      * Creates a task that is initially not done.
      *
      * @param description the task description
+     * @param taskType the type of this task
      */
-    protected Task(String description) {
+    protected Task(String description, TaskType taskType) {
         this.description = description;
+        this.taskType = taskType;
         this.isDone = false;
     }
 
@@ -35,15 +38,8 @@ public abstract class Task {
         return isDone ? "X" : " ";
     }
 
-    /**
-     * Returns the one-letter icon for this kind of task.
-     *
-     * @return the task type icon
-     */
-    protected abstract String getTypeIcon();
-
     @Override
     public String toString() {
-        return "[" + getTypeIcon() + "][" + getStatusIcon() + "] " + description;
+        return "[" + taskType.getIcon() + "][" + getStatusIcon() + "] " + description;
     }
 }
