@@ -28,6 +28,10 @@ public class Eli {
                     break;
                 } else if (command.equals("list")) {
                     printList(tasks);
+                } else if (command.equals("find")) {
+                    throw new EliException("OOPS!!! The keyword for find cannot be empty.");
+                } else if (command.startsWith("find ")) {
+                    findTasks(tasks, command.substring(5).trim());
                 } else if (command.equals("todo")) {
                     throw new EliException("OOPS!!! The description of a todo cannot be empty.");
             } else if (command.startsWith("todo ")) {
@@ -146,6 +150,25 @@ public class Eli {
             System.out.println((i + 1) + "." + tasks.get(i));
         }
         System.out.println(DIVIDER);
+    }
+
+    /** Prints tasks whose descriptions contain the given keyword. */
+    private static void findTasks(TaskList tasks, String keyword) {
+        if (keyword.isEmpty()) {
+            printError("OOPS!!! The keyword for find cannot be empty.");
+            return;
+        }
+        String searchTerm = keyword.toLowerCase();
+        int matches = 0;
+        for (int i = 0; i < tasks.size(); i++) {
+            if (tasks.get(i).getDescription().toLowerCase().contains(searchTerm)) {
+                System.out.println((i + 1) + "." + tasks.get(i));
+                matches++;
+            }
+        }
+        if (matches == 0) {
+            System.out.println("No matching tasks found.");
+        }
     }
 
     /** Prints a confirmation after a task is added. */
