@@ -1,3 +1,5 @@
+package duke;
+
 import java.util.ArrayList;
 
 /** Represents the collection of tasks managed by the application. */

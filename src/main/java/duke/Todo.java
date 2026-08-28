@@ -1,3 +1,5 @@
+package duke;
+
 /**
  * Represents a task with no date or time attached to it.
  */
