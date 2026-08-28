@@ -2,7 +2,7 @@ plugins {
     id 'application'
 }
 
-group = 'duke'
+group = 'Eli'
 version = '1.0'
 
 repositories {
@@ -25,7 +25,7 @@ java {
 }
 
 application {
-    mainClass = 'duke.Eli'
+    mainClass = 'Eli.Eli'
 }
 
 tasks.named('jar') {

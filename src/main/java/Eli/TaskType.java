@@ -1,4 +1,4 @@
-package duke;
+package Eli;
 
 /**
  * Lists the supported kinds of tasks and their display icons.

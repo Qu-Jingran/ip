@@ -1,4 +1,4 @@
-package duke;
+package Eli;
 
 /**
  * Represents an error caused by an invalid command entered into Eli.
