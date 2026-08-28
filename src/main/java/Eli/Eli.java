@@ -114,7 +114,7 @@ public class Eli {
                 int taskNumber = parseTaskNumber(command.substring(7));
                 if (isValidTaskNumber(taskNumber, tasks.size())) {
                     Task removedTask = tasks.removeTask(taskNumber);
-                    saveTasks(tasks);O\
+                    saveTasks(tasks);
                     printDeletedTask(removedTask, tasks.size());
                 } else {
                     throw new EliException("OOPS!!! We don't have a task with that number.");
