@@ -1,14 +1,22 @@
 import java.util.ArrayList;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Scanner;
 
 /** Runs the Eli task-list application. */
 public class Eli {
     private static final String DIVIDER = "____________________________________________________________";
+    private static final String DATA_FILE = "duke.txt";
 
     /** Reads commands and manages the user's task list. */
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
         ArrayList<Task> tasks = new ArrayList<>();
+
+        loadTasks(tasks);
 
         printWelcome();
 
@@ -29,6 +37,7 @@ public class Eli {
                 } else {
                     Task task = new Todo(description);
                     tasks.add(task);
+                    saveTasks(tasks);
                     printAddedTask(task, tasks.size());
                 }
             } else if (command.equals("deadline")) {
@@ -49,6 +58,7 @@ public class Eli {
                     } else {
                         Task task = new Deadline(description, by);
                         tasks.add(task);
+                        saveTasks(tasks);
                         printAddedTask(task, tasks.size());
                     }
                 }
@@ -74,6 +84,7 @@ public class Eli {
                     } else {
                         Task task = new Event(description, from, to);
                         tasks.add(task);
+                        saveTasks(tasks);
                         printAddedTask(task, tasks.size());
                     }
                 }
@@ -81,6 +92,7 @@ public class Eli {
                 int taskNumber = parseTaskNumber(command.substring(5));
                 if (isValidTaskNumber(taskNumber, tasks.size())) {
                     tasks.get(taskNumber - 1).markAsDone();
+                    saveTasks(tasks);
                     printTaskStatus("Nice! I've marked this task as done:", tasks.get(taskNumber - 1));
                 } else {
                     throw new EliException("OOPS!!! We don't have a task with that number.");
@@ -89,6 +101,7 @@ public class Eli {
                 int taskNumber = parseTaskNumber(command.substring(7));
                 if (isValidTaskNumber(taskNumber, tasks.size())) {
                     tasks.get(taskNumber - 1).markAsNotDone();
+                    saveTasks(tasks);
                     printTaskStatus("OK, I've marked this task as not done yet:", tasks.get(taskNumber - 1));
                 } else {
                     throw new EliException("OOPS!!! We don't have a task with that number.");
@@ -97,6 +110,7 @@ public class Eli {
                 int taskNumber = parseTaskNumber(command.substring(7));
                 if (isValidTaskNumber(taskNumber, tasks.size())) {
                     Task removedTask = tasks.remove(taskNumber - 1);
+                    saveTasks(tasks);
                     printDeletedTask(removedTask, tasks.size());
                 } else {
                     throw new EliException("OOPS!!! We don't have a task with that number.");
@@ -179,5 +193,24 @@ public class Eli {
     /** Returns whether a task number refers to an existing task. */
     private static boolean isValidTaskNumber(int taskNumber, int taskCount) {
         return taskNumber >= 1 && taskNumber <= taskCount;
+    }
+
+    /** Loads saved tasks, if a save file exists. */
+    @SuppressWarnings("unchecked")
+    private static void loadTasks(ArrayList<Task> tasks) {
+        try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(DATA_FILE))) {
+            tasks.addAll((ArrayList<Task>) input.readObject());
+        } catch (IOException | ClassNotFoundException exception) {
+            // A missing or unreadable file is treated as an empty task list.
+        }
+    }
+
+    /** Saves the current task list to disk. */
+    private static void saveTasks(ArrayList<Task> tasks) {
+        try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
+            output.writeObject(tasks);
+        } catch (IOException exception) {
+            printError("OOPS!!! Could not save your tasks.");
+        }
     }
 }
