@@ -1,3 +1,5 @@
+package duke;
+
 /**
  * Represents a task that can be marked as done or not done.
  * Specific task types provide their own type icon and extra details.
