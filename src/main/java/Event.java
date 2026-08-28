@@ -1,3 +1,7 @@
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+
 /**
  * Represents a task that has a start time and an end time.
  */
@@ -33,6 +37,3 @@ public class Event extends Task {
         }
     }
 }
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
