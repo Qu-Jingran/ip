@@ -1,0 +1,24 @@
+plugins {
+    id 'application'
+}
+
+group = 'duke'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+application {
+    mainClass = 'duke.Eli'
+}
+
+tasks.named('run') {
+    standardInput = System.in
+}
