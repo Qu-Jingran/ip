@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -13,7 +12,7 @@ public class Eli {
     /** Reads commands and manages the user's task list. */
     public static void main(String[] args) {
         Scanner input = new Scanner(System.in);
-        ArrayList<Task> tasks = new ArrayList<>();
+        TaskList tasks = new TaskList();
 
         loadTasks(tasks);
 
@@ -35,7 +34,7 @@ public class Eli {
                     throw new EliException("OOPS!!! The description of a todo cannot be empty.");
                 } else {
                     Task task = new Todo(description);
-                    tasks.add(task);
+                    tasks.addTask(task);
                     saveTasks(tasks);
                     printAddedTask(task, tasks.size());
                 }
@@ -56,7 +55,7 @@ public class Eli {
                         throw new EliException("OOPS!!! A deadline needs a /by value.");
                     } else {
                         Task task = new Deadline(description, by);
-                        tasks.add(task);
+                        tasks.addTask(task);
                         saveTasks(tasks);
                         printAddedTask(task, tasks.size());
                     }
@@ -82,7 +81,7 @@ public class Eli {
                         throw new EliException("OOPS!!! An event needs /from and /to values.");
                     } else {
                         Task task = new Event(description, from, to);
-                        tasks.add(task);
+                        tasks.addTask(task);
                         saveTasks(tasks);
                         printAddedTask(task, tasks.size());
                     }
@@ -90,25 +89,25 @@ public class Eli {
             } else if (command.startsWith("mark ")) {
                 int taskNumber = parseTaskNumber(command.substring(5));
                 if (isValidTaskNumber(taskNumber, tasks.size())) {
-                    tasks.get(taskNumber - 1).markAsDone();
+                    tasks.getTask(taskNumber).markAsDone();
                     saveTasks(tasks);
-                    printTaskStatus("Nice! I've marked this task as done:", tasks.get(taskNumber - 1));
+                    printTaskStatus("Nice! I've marked this task as done:", tasks.getTask(taskNumber));
                 } else {
                     throw new EliException("OOPS!!! We don't have a task with that number.");
                 }
             } else if (command.startsWith("unmark ")) {
                 int taskNumber = parseTaskNumber(command.substring(7));
                 if (isValidTaskNumber(taskNumber, tasks.size())) {
-                    tasks.get(taskNumber - 1).markAsNotDone();
+                    tasks.getTask(taskNumber).markAsNotDone();
                     saveTasks(tasks);
-                    printTaskStatus("OK, I've marked this task as not done yet:", tasks.get(taskNumber - 1));
+                    printTaskStatus("OK, I've marked this task as not done yet:", tasks.getTask(taskNumber));
                 } else {
                     throw new EliException("OOPS!!! We don't have a task with that number.");
                 }
             } else if (command.startsWith("delete ")) {
                 int taskNumber = parseTaskNumber(command.substring(7));
                 if (isValidTaskNumber(taskNumber, tasks.size())) {
-                    Task removedTask = tasks.remove(taskNumber - 1);
+                    Task removedTask = tasks.removeTask(taskNumber);
                     saveTasks(tasks);
                     printDeletedTask(removedTask, tasks.size());
                 } else {
@@ -138,7 +137,7 @@ public class Eli {
     }
 
     /** Prints all tasks in the list. */
-    private static void printList(ArrayList<Task> tasks) {
+    private static void printList(TaskList tasks) {
         System.out.println(DIVIDER);
         System.out.println("Here are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
@@ -196,16 +195,16 @@ public class Eli {
 
     /** Loads saved tasks, if a save file exists. */
     @SuppressWarnings("unchecked")
-    private static void loadTasks(ArrayList<Task> tasks) {
+    private static void loadTasks(TaskList tasks) {
         try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(DATA_FILE))) {
-            tasks.addAll((ArrayList<Task>) input.readObject());
+            tasks.addAll((TaskList) input.readObject());
         } catch (IOException | ClassNotFoundException exception) {
             // A missing or unreadable file is treated as an empty task list.
         }
     }
 
     /** Saves the current task list to disk. */
-    private static void saveTasks(ArrayList<Task> tasks) {
+    private static void saveTasks(TaskList tasks) {
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
             output.writeObject(tasks);
         } catch (IOException exception) {
