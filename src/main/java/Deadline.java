@@ -12,11 +12,29 @@ public class Deadline extends Task {
      */
     public Deadline(String description, String by) {
         super(description, TaskType.DEADLINE);
-        this.by = by;
+        this.by = formatDateTime(by);
     }
 
     @Override
     public String toString() {
         return super.toString() + " (by: " + by + ")";
     }
+
+    /** Formats common ISO date/time input while preserving natural-language input. */
+    private static String formatDateTime(String value) {
+        try {
+            return LocalDateTime.parse(value, DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm"))
+                    .format(DateTimeFormatter.ofPattern("MMM d yyyy, h:mma"));
+        } catch (DateTimeParseException ignored) {
+            try {
+                return LocalDate.parse(value).format(DateTimeFormatter.ofPattern("MMM d yyyy"));
+            } catch (DateTimeParseException ignoredDate) {
+                return value;
+            }
+        }
+    }
 }
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
