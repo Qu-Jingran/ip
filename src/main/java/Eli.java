@@ -5,7 +5,6 @@ import java.io.ObjectOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Scanner;
-
 /** Runs the Eli task-list application. */
 public class Eli {
     private static final String DIVIDER = "____________________________________________________________";
