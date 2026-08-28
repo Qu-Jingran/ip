@@ -34,6 +34,11 @@ public abstract class Task implements Serializable {
         isDone = false;
     }
 
+    /** Returns the description used to search for this task. */
+    public String getDescription() {
+        return description;
+    }
+
     /**
      * Returns the icon that shows whether this task is done.
      *
