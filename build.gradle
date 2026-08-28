@@ -28,6 +28,12 @@ application {
     mainClass = 'duke.Eli'
 }
 
+tasks.named('jar') {
+    manifest {
+        attributes('Main-Class': application.mainClass.get())
+    }
+}
+
 tasks.named('run') {
     standardInput = System.in
 }
