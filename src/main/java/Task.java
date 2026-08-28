@@ -2,7 +2,10 @@
  * Represents a task that can be marked as done or not done.
  * Specific task types provide their own type icon and extra details.
  */
-public abstract class Task {
+import java.io.Serializable;
+
+public abstract class Task implements Serializable {
+    private static final long serialVersionUID = 1L;
     private final String description;
     private final TaskType taskType;
     private boolean isDone;
