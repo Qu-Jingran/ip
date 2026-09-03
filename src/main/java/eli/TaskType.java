@@ -1,4 +1,4 @@
-package Eli;
+package eli;
 
 /**
  * Lists the supported kinds of tasks and their display icons.
