@@ -1,6 +1,7 @@
 plugins {
     id 'application'
     id 'checkstyle'
+    id 'com.gradleup.shadow' version '9.5.1'
 }
 
 group = 'Eli'
@@ -11,6 +12,21 @@ repositories {
 }
 
 dependencies {
+    String javaFxVersion = '17.0.7'
+
+    implementation("org.openjfx:javafx-base:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-base:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-base:${javaFxVersion}:linux")
+    implementation("org.openjfx:javafx-controls:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-controls:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-controls:${javaFxVersion}:linux")
+    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-fxml:${javaFxVersion}:linux")
+    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:win")
+    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:mac")
+    implementation("org.openjfx:javafx-graphics:${javaFxVersion}:linux")
+
     testImplementation 'org.junit.jupiter:junit-jupiter:5.12.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.12.2'
 }
@@ -26,7 +42,12 @@ java {
 }
 
 application {
-    mainClass = 'eli.Eli'
+    mainClass = 'eli.Launcher'
+}
+
+shadowJar {
+    archiveBaseName = 'eli'
+    archiveClassifier = null
 }
 
 tasks.named('jar') {
