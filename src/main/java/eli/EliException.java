@@ -1,4 +1,4 @@
-package Eli;
+package eli;
 
 /**
  * Represents an error caused by an invalid command entered into Eli.

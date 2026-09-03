@@ -1,11 +1,11 @@
-package Eli;
+package eli;
+
+import java.io.Serializable;
 
 /**
  * Represents a task that can be marked as done or not done.
  * Specific task types provide their own type icon and extra details.
  */
-import java.io.Serializable;
-
 public abstract class Task implements Serializable {
     private static final long serialVersionUID = 1L;
     private final String description;

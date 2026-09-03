@@ -1,4 +1,4 @@
-package Eli;
+package eli;
 
 import java.util.ArrayList;
 

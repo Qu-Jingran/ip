@@ -1,11 +1,12 @@
-package Eli;
+package eli;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.util.Scanner;
+
 /** Runs the Eli task-list application. */
 public class Eli {
     private static final String DIVIDER = "____________________________________________________________";
@@ -34,94 +35,94 @@ public class Eli {
                     findTasks(tasks, command.substring(5).trim());
                 } else if (command.equals("todo")) {
                     throw new EliException("OOPS!!! The description of a todo cannot be empty.");
-            } else if (command.startsWith("todo ")) {
-                String description = command.substring(5).trim();
-                if (description.isEmpty()) {
-                    throw new EliException("OOPS!!! The description of a todo cannot be empty.");
-                } else {
-                    Task task = new Todo(description);
-                    tasks.addTask(task);
-                    saveTasks(tasks);
-                    printAddedTask(task, tasks.size());
-                }
-            } else if (command.equals("deadline")) {
-                throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
-            } else if (command.startsWith("deadline ")) {
-                int byIndex = command.indexOf(" /by ");
-                if (byIndex == -1) {
-                    throw new EliException("OOPS!!! A deadline needs a /by value.");
-                } else if (byIndex <= 9) {
-                    throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
-                } else {
-                    String description = command.substring(9, byIndex).trim();
-                    String by = command.substring(byIndex + 5).trim();
+                } else if (command.startsWith("todo ")) {
+                    String description = command.substring(5).trim();
                     if (description.isEmpty()) {
-                        throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
-                    } else if (by.isEmpty()) {
-                        throw new EliException("OOPS!!! A deadline needs a /by value.");
+                        throw new EliException("OOPS!!! The description of a todo cannot be empty.");
                     } else {
-                        Task task = new Deadline(description, by);
+                        Task task = new Todo(description);
                         tasks.addTask(task);
                         saveTasks(tasks);
                         printAddedTask(task, tasks.size());
                     }
-                }
-            } else if (command.equals("event")) {
-                throw new EliException("OOPS!!! The description of an event cannot be empty.");
-            } else if (command.startsWith("event ")) {
-                int fromIndex = command.indexOf(" /from ");
-                int toIndex = command.indexOf(" /to ");
-                if (fromIndex == -1 || toIndex == -1 || fromIndex > toIndex) {
-                    throw new EliException("OOPS!!! An event needs /from and /to values.");
-                } else if (fromIndex <= 6) {
+                } else if (command.equals("deadline")) {
+                    throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+                } else if (command.startsWith("deadline ")) {
+                    int byIndex = command.indexOf(" /by ");
+                    if (byIndex == -1) {
+                        throw new EliException("OOPS!!! A deadline needs a /by value.");
+                    } else if (byIndex <= 9) {
+                        throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+                    } else {
+                        String description = command.substring(9, byIndex).trim();
+                        String by = command.substring(byIndex + 5).trim();
+                        if (description.isEmpty()) {
+                            throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+                        } else if (by.isEmpty()) {
+                            throw new EliException("OOPS!!! A deadline needs a /by value.");
+                        } else {
+                            Task task = new Deadline(description, by);
+                            tasks.addTask(task);
+                            saveTasks(tasks);
+                            printAddedTask(task, tasks.size());
+                        }
+                    }
+                } else if (command.equals("event")) {
                     throw new EliException("OOPS!!! The description of an event cannot be empty.");
-                } else if (toIndex < fromIndex + 7) {
-                    throw new EliException("OOPS!!! An event needs /from and /to values.");
-                } else {
-                    String description = command.substring(6, fromIndex).trim();
-                    String from = command.substring(fromIndex + 7, toIndex).trim();
-                    String to = command.substring(toIndex + 5).trim();
-                    if (description.isEmpty()) {
+                } else if (command.startsWith("event ")) {
+                    int fromIndex = command.indexOf(" /from ");
+                    int toIndex = command.indexOf(" /to ");
+                    if (fromIndex == -1 || toIndex == -1 || fromIndex > toIndex) {
+                        throw new EliException("OOPS!!! An event needs /from and /to values.");
+                    } else if (fromIndex <= 6) {
                         throw new EliException("OOPS!!! The description of an event cannot be empty.");
-                    } else if (from.isEmpty() || to.isEmpty()) {
+                    } else if (toIndex < fromIndex + 7) {
                         throw new EliException("OOPS!!! An event needs /from and /to values.");
                     } else {
-                        Task task = new Event(description, from, to);
-                        tasks.addTask(task);
-                        saveTasks(tasks);
-                        printAddedTask(task, tasks.size());
+                        String description = command.substring(6, fromIndex).trim();
+                        String from = command.substring(fromIndex + 7, toIndex).trim();
+                        String to = command.substring(toIndex + 5).trim();
+                        if (description.isEmpty()) {
+                            throw new EliException("OOPS!!! The description of an event cannot be empty.");
+                        } else if (from.isEmpty() || to.isEmpty()) {
+                            throw new EliException("OOPS!!! An event needs /from and /to values.");
+                        } else {
+                            Task task = new Event(description, from, to);
+                            tasks.addTask(task);
+                            saveTasks(tasks);
+                            printAddedTask(task, tasks.size());
+                        }
                     }
-                }
-            } else if (command.startsWith("mark ")) {
-                int taskNumber = parseTaskNumber(command.substring(5));
-                if (isValidTaskNumber(taskNumber, tasks.size())) {
-                    tasks.getTask(taskNumber).markAsDone();
-                    saveTasks(tasks);
-                    printTaskStatus("Nice! I've marked this task as done:", tasks.getTask(taskNumber));
+                } else if (command.startsWith("mark ")) {
+                    int taskNumber = parseTaskNumber(command.substring(5));
+                    if (isValidTaskNumber(taskNumber, tasks.size())) {
+                        tasks.getTask(taskNumber).markAsDone();
+                        saveTasks(tasks);
+                        printTaskStatus("Nice! I've marked this task as done:", tasks.getTask(taskNumber));
+                    } else {
+                        throw new EliException("OOPS!!! We don't have a task with that number.");
+                    }
+                } else if (command.startsWith("unmark ")) {
+                    int taskNumber = parseTaskNumber(command.substring(7));
+                    if (isValidTaskNumber(taskNumber, tasks.size())) {
+                        tasks.getTask(taskNumber).markAsNotDone();
+                        saveTasks(tasks);
+                        printTaskStatus("OK, I've marked this task as not done yet:", tasks.getTask(taskNumber));
+                    } else {
+                        throw new EliException("OOPS!!! We don't have a task with that number.");
+                    }
+                } else if (command.startsWith("delete ")) {
+                    int taskNumber = parseTaskNumber(command.substring(7));
+                    if (isValidTaskNumber(taskNumber, tasks.size())) {
+                        Task removedTask = tasks.removeTask(taskNumber);
+                        saveTasks(tasks);
+                        printDeletedTask(removedTask, tasks.size());
+                    } else {
+                        throw new EliException("OOPS!!! We don't have a task with that number.");
+                    }
                 } else {
-                    throw new EliException("OOPS!!! We don't have a task with that number.");
+                    throw new EliException("OOPS!!! I'm sorry, but I don't know what that means :-(");
                 }
-            } else if (command.startsWith("unmark ")) {
-                int taskNumber = parseTaskNumber(command.substring(7));
-                if (isValidTaskNumber(taskNumber, tasks.size())) {
-                    tasks.getTask(taskNumber).markAsNotDone();
-                    saveTasks(tasks);
-                    printTaskStatus("OK, I've marked this task as not done yet:", tasks.getTask(taskNumber));
-                } else {
-                    throw new EliException("OOPS!!! We don't have a task with that number.");
-                }
-            } else if (command.startsWith("delete ")) {
-                int taskNumber = parseTaskNumber(command.substring(7));
-                if (isValidTaskNumber(taskNumber, tasks.size())) {
-                    Task removedTask = tasks.removeTask(taskNumber);
-                    saveTasks(tasks);
-                    printDeletedTask(removedTask, tasks.size());
-                } else {
-                    throw new EliException("OOPS!!! We don't have a task with that number.");
-                }
-            } else {
-                throw new EliException("OOPS!!! I'm sorry, but I don't know what that means :-(");
-            }
             } catch (EliException exception) {
                 printError(exception.getMessage());
             }

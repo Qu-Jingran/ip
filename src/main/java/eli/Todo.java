@@ -1,4 +1,4 @@
-package Eli;
+package eli;
 
 /**
  * Represents a task with no date or time attached to it.
