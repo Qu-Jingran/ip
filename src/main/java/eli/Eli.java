@@ -7,206 +7,219 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Scanner;
 
-/** Runs the Eli task-list application. */
+/** Runs the Eli task-list application and responds to user commands. */
 public class Eli {
     private static final String DIVIDER = "____________________________________________________________";
     private static final String DATA_FILE = "duke.txt";
 
-    /** Reads commands and manages the user's task list. */
-    public static void main(String[] args) {
-        Scanner input = new Scanner(System.in);
-        TaskList tasks = new TaskList();
+    private final TaskList tasks;
 
-        loadTasks(tasks);
-
-        printWelcome();
-
-        while (input.hasNextLine()) {
-            String command = input.nextLine().trim();
-
-            try {
-                if (command.equals("bye") || command.equals("再见")) {
-                    break;
-                } else if (command.equals("list")) {
-                    printList(tasks);
-                } else if (command.equals("find")) {
-                    throw new EliException("OOPS!!! The keyword for find cannot be empty.");
-                } else if (command.startsWith("find ")) {
-                    findTasks(tasks, command.substring(5).trim());
-                } else if (command.equals("todo")) {
-                    throw new EliException("OOPS!!! The description of a todo cannot be empty.");
-                } else if (command.startsWith("todo ")) {
-                    String description = command.substring(5).trim();
-                    if (description.isEmpty()) {
-                        throw new EliException("OOPS!!! The description of a todo cannot be empty.");
-                    } else {
-                        Task task = new Todo(description);
-                        tasks.addTask(task);
-                        saveTasks(tasks);
-                        printAddedTask(task, tasks.size());
-                    }
-                } else if (command.equals("deadline")) {
-                    throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
-                } else if (command.startsWith("deadline ")) {
-                    int byIndex = command.indexOf(" /by ");
-                    if (byIndex == -1) {
-                        throw new EliException("OOPS!!! A deadline needs a /by value.");
-                    } else if (byIndex <= 9) {
-                        throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
-                    } else {
-                        String description = command.substring(9, byIndex).trim();
-                        String by = command.substring(byIndex + 5).trim();
-                        if (description.isEmpty()) {
-                            throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
-                        } else if (by.isEmpty()) {
-                            throw new EliException("OOPS!!! A deadline needs a /by value.");
-                        } else {
-                            Task task = new Deadline(description, by);
-                            tasks.addTask(task);
-                            saveTasks(tasks);
-                            printAddedTask(task, tasks.size());
-                        }
-                    }
-                } else if (command.equals("event")) {
-                    throw new EliException("OOPS!!! The description of an event cannot be empty.");
-                } else if (command.startsWith("event ")) {
-                    int fromIndex = command.indexOf(" /from ");
-                    int toIndex = command.indexOf(" /to ");
-                    if (fromIndex == -1 || toIndex == -1 || fromIndex > toIndex) {
-                        throw new EliException("OOPS!!! An event needs /from and /to values.");
-                    } else if (fromIndex <= 6) {
-                        throw new EliException("OOPS!!! The description of an event cannot be empty.");
-                    } else if (toIndex < fromIndex + 7) {
-                        throw new EliException("OOPS!!! An event needs /from and /to values.");
-                    } else {
-                        String description = command.substring(6, fromIndex).trim();
-                        String from = command.substring(fromIndex + 7, toIndex).trim();
-                        String to = command.substring(toIndex + 5).trim();
-                        if (description.isEmpty()) {
-                            throw new EliException("OOPS!!! The description of an event cannot be empty.");
-                        } else if (from.isEmpty() || to.isEmpty()) {
-                            throw new EliException("OOPS!!! An event needs /from and /to values.");
-                        } else {
-                            Task task = new Event(description, from, to);
-                            tasks.addTask(task);
-                            saveTasks(tasks);
-                            printAddedTask(task, tasks.size());
-                        }
-                    }
-                } else if (command.startsWith("mark ")) {
-                    int taskNumber = parseTaskNumber(command.substring(5));
-                    if (isValidTaskNumber(taskNumber, tasks.size())) {
-                        tasks.getTask(taskNumber).markAsDone();
-                        saveTasks(tasks);
-                        printTaskStatus("Nice! I've marked this task as done:", tasks.getTask(taskNumber));
-                    } else {
-                        throw new EliException("OOPS!!! We don't have a task with that number.");
-                    }
-                } else if (command.startsWith("unmark ")) {
-                    int taskNumber = parseTaskNumber(command.substring(7));
-                    if (isValidTaskNumber(taskNumber, tasks.size())) {
-                        tasks.getTask(taskNumber).markAsNotDone();
-                        saveTasks(tasks);
-                        printTaskStatus("OK, I've marked this task as not done yet:", tasks.getTask(taskNumber));
-                    } else {
-                        throw new EliException("OOPS!!! We don't have a task with that number.");
-                    }
-                } else if (command.startsWith("delete ")) {
-                    int taskNumber = parseTaskNumber(command.substring(7));
-                    if (isValidTaskNumber(taskNumber, tasks.size())) {
-                        Task removedTask = tasks.removeTask(taskNumber);
-                        saveTasks(tasks);
-                        printDeletedTask(removedTask, tasks.size());
-                    } else {
-                        throw new EliException("OOPS!!! We don't have a task with that number.");
-                    }
-                } else {
-                    throw new EliException("OOPS!!! I'm sorry, but I don't know what that means :-(");
-                }
-            } catch (EliException exception) {
-                printError(exception.getMessage());
-            }
-        }
-
-        System.out.println("Bye. 记得来找我\n" + DIVIDER);
+    /** Creates Eli and loads any tasks saved previously. */
+    public Eli() {
+        tasks = new TaskList();
+        loadTasks();
     }
 
-    /** Prints the application's welcome message. */
-    private static void printWelcome() {
+    /** Runs Eli using the original command-line interface. */
+    public static void main(String[] args) {
+        Eli eli = new Eli();
+        Scanner input = new Scanner(System.in);
+
+        System.out.println(eli.getWelcomeMessage());
+        while (input.hasNextLine()) {
+            String command = input.nextLine();
+            System.out.println(DIVIDER);
+            System.out.println(eli.getResponse(command));
+            System.out.println(DIVIDER);
+            if (eli.isExitCommand(command)) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Executes one command and returns Eli's response for either UI.
+     *
+     * @param input command entered by the user
+     * @return Eli's response to the command
+     */
+    public String getResponse(String input) {
+        String command = input.trim();
+        try {
+            if (isExitCommand(command)) {
+                return "Bye. 记得来找我";
+            } else if (command.equals("list")) {
+                return getTaskListResponse();
+            } else if (command.equals("find")) {
+                throw new EliException("OOPS!!! The keyword for find cannot be empty.");
+            } else if (command.startsWith("find ")) {
+                return getFindResponse(command.substring(5).trim());
+            } else if (command.equals("todo")) {
+                throw new EliException("OOPS!!! The description of a todo cannot be empty.");
+            } else if (command.startsWith("todo ")) {
+                return addTodo(command.substring(5).trim());
+            } else if (command.equals("deadline")) {
+                throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+            } else if (command.startsWith("deadline ")) {
+                return addDeadline(command);
+            } else if (command.equals("event")) {
+                throw new EliException("OOPS!!! The description of an event cannot be empty.");
+            } else if (command.startsWith("event ")) {
+                return addEvent(command);
+            } else if (command.startsWith("mark ")) {
+                return updateTaskStatus(command.substring(5), true);
+            } else if (command.startsWith("unmark ")) {
+                return updateTaskStatus(command.substring(7), false);
+            } else if (command.startsWith("delete ")) {
+                return deleteTask(command.substring(7));
+            } else {
+                throw new EliException("OOPS!!! I'm sorry, but I don't know what that means :-(");
+            }
+        } catch (EliException exception) {
+            return exception.getMessage();
+        }
+    }
+
+    /** Returns whether the command asks Eli to exit. */
+    public boolean isExitCommand(String input) {
+        String command = input.trim();
+        return command.equals("bye") || command.equals("再见");
+    }
+
+    /** Returns the welcome text used by the command-line interface. */
+    private String getWelcomeMessage() {
         String banner = " _______     _           _____ \n"
                 + "|  _____|   | |         |_   _|\n"
                 + "| |___      | |           | |  \n"
                 + "|  ___|     | |           | |  \n"
                 + "| |_____    | |_____     _| |_ \n"
                 + "|_______|   |_______|   |_____|\n";
-        System.out.println(banner);
-        System.out.println(DIVIDER + "\nHello! I'm Eli.\n你需要什么帮助？\n" + DIVIDER);
+        return banner + DIVIDER + "\nHello! I'm Eli.\n你需要什么帮助？\n" + DIVIDER;
     }
 
-    /** Prints all tasks in the list. */
-    private static void printList(TaskList tasks) {
-        System.out.println(DIVIDER);
-        System.out.println("Here are the tasks in your list:");
+    /** Returns all currently stored tasks. */
+    private String getTaskListResponse() {
+        StringBuilder response = new StringBuilder("Here are the tasks in your list:");
         for (int i = 0; i < tasks.size(); i++) {
-            System.out.println((i + 1) + "." + tasks.get(i));
+            response.append(System.lineSeparator())
+                    .append(i + 1)
+                    .append('.')
+                    .append(tasks.get(i));
         }
-        System.out.println(DIVIDER);
+        return response.toString();
     }
 
-    /** Prints tasks whose descriptions contain the given keyword. */
-    private static void findTasks(TaskList tasks, String keyword) {
+    /** Returns tasks whose descriptions contain the keyword. */
+    private String getFindResponse(String keyword) throws EliException {
         if (keyword.isEmpty()) {
-            printError("OOPS!!! The keyword for find cannot be empty.");
-            return;
+            throw new EliException("OOPS!!! The keyword for find cannot be empty.");
         }
+
         String searchTerm = keyword.toLowerCase();
-        int matches = 0;
+        StringBuilder response = new StringBuilder();
         for (int i = 0; i < tasks.size(); i++) {
-            if (tasks.get(i).getDescription().toLowerCase().contains(searchTerm)) {
-                System.out.println((i + 1) + "." + tasks.get(i));
-                matches++;
+            Task task = tasks.get(i);
+            if (task.getDescription().toLowerCase().contains(searchTerm)) {
+                if (!response.isEmpty()) {
+                    response.append(System.lineSeparator());
+                }
+                response.append(i + 1).append('.').append(task);
             }
         }
-        if (matches == 0) {
-            System.out.println("No matching tasks found.");
+        return response.isEmpty() ? "No matching tasks found." : response.toString();
+    }
+
+    /** Adds a to-do task and returns a confirmation. */
+    private String addTodo(String description) throws EliException {
+        if (description.isEmpty()) {
+            throw new EliException("OOPS!!! The description of a todo cannot be empty.");
         }
+        return addTask(new Todo(description));
     }
 
-    /** Prints a confirmation after a task is added. */
-    private static void printAddedTask(Task task, int taskCount) {
-        System.out.println(DIVIDER);
-        System.out.println("Got it. I've added this task:");
-        System.out.println("  " + task);
-        System.out.println("Now you have " + taskCount + " tasks in the list.");
-        System.out.println(DIVIDER);
+    /** Adds a deadline task and returns a confirmation. */
+    private String addDeadline(String command) throws EliException {
+        int byIndex = command.indexOf(" /by ");
+        if (byIndex == -1) {
+            throw new EliException("OOPS!!! A deadline needs a /by value.");
+        } else if (byIndex <= 9) {
+            throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+        }
+
+        String description = command.substring(9, byIndex).trim();
+        String by = command.substring(byIndex + 5).trim();
+        if (description.isEmpty()) {
+            throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+        } else if (by.isEmpty()) {
+            throw new EliException("OOPS!!! A deadline needs a /by value.");
+        }
+        return addTask(new Deadline(description, by));
     }
 
-    /** Prints a confirmation after a task is deleted. */
-    private static void printDeletedTask(Task task, int taskCount) {
-        System.out.println(DIVIDER);
-        System.out.println("Noted. I've removed this task:");
-        System.out.println("  " + task);
-        System.out.println("Now you have " + taskCount + " tasks in the list.");
-        System.out.println(DIVIDER);
+    /** Adds an event task and returns a confirmation. */
+    private String addEvent(String command) throws EliException {
+        int fromIndex = command.indexOf(" /from ");
+        int toIndex = command.indexOf(" /to ");
+        if (fromIndex == -1 || toIndex == -1 || fromIndex > toIndex) {
+            throw new EliException("OOPS!!! An event needs /from and /to values.");
+        } else if (fromIndex <= 6) {
+            throw new EliException("OOPS!!! The description of an event cannot be empty.");
+        } else if (toIndex < fromIndex + 7) {
+            throw new EliException("OOPS!!! An event needs /from and /to values.");
+        }
+
+        String description = command.substring(6, fromIndex).trim();
+        String from = command.substring(fromIndex + 7, toIndex).trim();
+        String to = command.substring(toIndex + 5).trim();
+        if (description.isEmpty()) {
+            throw new EliException("OOPS!!! The description of an event cannot be empty.");
+        } else if (from.isEmpty() || to.isEmpty()) {
+            throw new EliException("OOPS!!! An event needs /from and /to values.");
+        }
+        return addTask(new Event(description, from, to));
     }
 
-    /** Prints a confirmation after a task's status changes. */
-    private static void printTaskStatus(String message, Task task) {
-        System.out.println(DIVIDER);
-        System.out.println(message);
-        System.out.println("  " + task);
-        System.out.println(DIVIDER);
+    /** Adds and saves one task. */
+    private String addTask(Task task) throws EliException {
+        tasks.addTask(task);
+        saveTasks();
+        return "Got it. I've added this task:\n  " + task
+                + "\nNow you have " + tasks.size() + " tasks in the list.";
     }
 
-    /** Prints an error message in Eli's standard format. */
-    private static void printError(String message) {
-        System.out.println(DIVIDER);
-        System.out.println(message);
-        System.out.println(DIVIDER);
+    /** Marks or unmarks a task and returns a confirmation. */
+    private String updateTaskStatus(String numberText, boolean isDone) throws EliException {
+        int taskNumber = parseTaskNumber(numberText);
+        if (!tasks.hasTaskNumber(taskNumber)) {
+            throw new EliException("OOPS!!! We don't have a task with that number.");
+        }
+
+        Task task = tasks.getTask(taskNumber);
+        if (isDone) {
+            task.markAsDone();
+            saveTasks();
+            return "Nice! I've marked this task as done:\n  " + task;
+        }
+        task.markAsNotDone();
+        saveTasks();
+        return "OK, I've marked this task as not done yet:\n  " + task;
+    }
+
+    /** Deletes a task and returns a confirmation. */
+    private String deleteTask(String numberText) throws EliException {
+        int taskNumber = parseTaskNumber(numberText);
+        if (!tasks.hasTaskNumber(taskNumber)) {
+            throw new EliException("OOPS!!! We don't have a task with that number.");
+        }
+
+        Task removedTask = tasks.removeTask(taskNumber);
+        saveTasks();
+        return "Noted. I've removed this task:\n  " + removedTask
+                + "\nNow you have " + tasks.size() + " tasks in the list.";
     }
 
     /** Converts task-number text to a number, or returns -1 when it is invalid. */
-    private static int parseTaskNumber(String text) {
+    private int parseTaskNumber(String text) {
         try {
             return Integer.parseInt(text.trim());
         } catch (NumberFormatException exception) {
@@ -214,14 +227,9 @@ public class Eli {
         }
     }
 
-    /** Returns whether a task number refers to an existing task. */
-    private static boolean isValidTaskNumber(int taskNumber, int taskCount) {
-        return taskNumber >= 1 && taskNumber <= taskCount;
-    }
-
     /** Loads saved tasks, if a save file exists. */
     @SuppressWarnings("unchecked")
-    private static void loadTasks(TaskList tasks) {
+    private void loadTasks() {
         try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(DATA_FILE))) {
             tasks.addAll((TaskList) input.readObject());
         } catch (IOException | ClassNotFoundException exception) {
@@ -230,11 +238,11 @@ public class Eli {
     }
 
     /** Saves the current task list to disk. */
-    private static void saveTasks(TaskList tasks) {
+    private void saveTasks() throws EliException {
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
             output.writeObject(tasks);
         } catch (IOException exception) {
-            printError("OOPS!!! Could not save your tasks.");
+            throw new EliException("OOPS!!! Could not save your tasks.");
         }
     }
 }
