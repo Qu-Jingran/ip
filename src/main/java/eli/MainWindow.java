@@ -39,12 +39,14 @@ public class MainWindow extends AnchorPane {
 
     /** Injects the Eli instance that handles commands. */
     public void setEli(Eli eli) {
+        assert eli != null : "Eli instance must be provided before accepting input";
         this.eli = eli;
     }
 
     /** Sends the entered command to Eli and displays both sides of the exchange. */
     @FXML
     private void handleUserInput() {
+        assert eli != null : "Eli instance must be set before accepting input";
         String input = userInput.getText();
         String response = eli.getResponse(input);
 

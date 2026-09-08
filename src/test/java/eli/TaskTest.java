@@ -1,6 +1,7 @@
 package eli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -39,5 +40,10 @@ public class TaskTest {
         Deadline task = new Deadline("submit", "next Friday");
 
         assertTrue(task.toString().contains("next Friday"));
+    }
+
+    @Test
+    public void todo_blankDescription_throwsAssertionError() {
+        assertThrows(AssertionError.class, () -> new Todo("  "));
     }
 }

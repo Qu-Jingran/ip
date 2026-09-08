@@ -8,16 +8,19 @@ public class TaskList extends ArrayList<Task> {
 
     /** Adds a task to this list. */
     public void addTask(Task task) {
+        assert task != null : "Task list must not contain null tasks";
         add(task);
     }
 
     /** Returns the task at a one-based user-facing number. */
     public Task getTask(int taskNumber) {
+        assert hasTaskNumber(taskNumber) : "Task number must refer to an existing task";
         return get(taskNumber - 1);
     }
 
     /** Removes and returns the task at a one-based user-facing number. */
     public Task removeTask(int taskNumber) {
+        assert hasTaskNumber(taskNumber) : "Task number must refer to an existing task";
         return remove(taskNumber - 1);
     }
 
