@@ -1,6 +1,7 @@
 package eli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,5 +16,21 @@ public class TaskListTest {
         assertEquals("first", tasks.getTask(1).toString().substring(7));
         assertEquals("second", tasks.removeTask(2).toString().substring(7));
         assertEquals(1, tasks.size());
+    }
+
+    @Test
+    public void getTask_invalidUserNumber_throwsAssertionError() {
+        TaskList tasks = new TaskList();
+        tasks.addTask(new Todo("only task"));
+
+        assertThrows(AssertionError.class, () -> tasks.getTask(0));
+        assertThrows(AssertionError.class, () -> tasks.getTask(2));
+    }
+
+    @Test
+    public void addTask_nullTask_throwsAssertionError() {
+        TaskList tasks = new TaskList();
+
+        assertThrows(AssertionError.class, () -> tasks.addTask(null));
     }
 }
