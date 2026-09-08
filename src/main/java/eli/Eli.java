@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /** Runs the Eli task-list application and responds to user commands. */
 public class Eli {
@@ -18,6 +20,11 @@ public class Eli {
     public Eli() {
         tasks = new TaskList();
         loadTasks();
+    }
+
+    /** Creates Eli with an existing task list, primarily for isolated testing. */
+    Eli(TaskList tasks) {
+        this.tasks = tasks;
     }
 
     /** Runs Eli using the original command-line interface. */
@@ -99,14 +106,12 @@ public class Eli {
 
     /** Returns all currently stored tasks. */
     private String getTaskListResponse() {
-        StringBuilder response = new StringBuilder("Here are the tasks in your list:");
-        for (int i = 0; i < tasks.size(); i++) {
-            response.append(System.lineSeparator())
-                    .append(i + 1)
-                    .append('.')
-                    .append(tasks.get(i));
-        }
-        return response.toString();
+        String taskLines = IntStream.range(0, tasks.size())
+                .mapToObj(index -> (index + 1) + "." + tasks.get(index))
+                .collect(Collectors.joining(System.lineSeparator()));
+        return taskLines.isEmpty()
+                ? "Here are the tasks in your list:"
+                : "Here are the tasks in your list:" + System.lineSeparator() + taskLines;
     }
 
     /** Returns tasks whose descriptions contain the keyword. */
@@ -116,17 +121,11 @@ public class Eli {
         }
 
         String searchTerm = keyword.toLowerCase();
-        StringBuilder response = new StringBuilder();
-        for (int i = 0; i < tasks.size(); i++) {
-            Task task = tasks.get(i);
-            if (task.getDescription().toLowerCase().contains(searchTerm)) {
-                if (!response.isEmpty()) {
-                    response.append(System.lineSeparator());
-                }
-                response.append(i + 1).append('.').append(task);
-            }
-        }
-        return response.isEmpty() ? "No matching tasks found." : response.toString();
+        String matches = IntStream.range(0, tasks.size())
+                .filter(index -> tasks.get(index).getDescription().toLowerCase().contains(searchTerm))
+                .mapToObj(index -> (index + 1) + "." + tasks.get(index))
+                .collect(Collectors.joining(System.lineSeparator()));
+        return matches.isEmpty() ? "No matching tasks found." : matches;
     }
 
     /** Adds a to-do task and returns a confirmation. */
