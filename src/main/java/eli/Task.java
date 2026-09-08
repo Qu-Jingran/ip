@@ -19,6 +19,9 @@ public abstract class Task implements Serializable {
      * @param taskType the type of this task
      */
     protected Task(String description, TaskType taskType) {
+        assert description != null : "Task description must not be null";
+        assert !description.isBlank() : "Task description must not be blank";
+        assert taskType != null : "Task type must not be null";
         this.description = description;
         this.taskType = taskType;
         this.isDone = false;

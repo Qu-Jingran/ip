@@ -58,6 +58,7 @@ tasks.named('jar') {
 
 tasks.named('run') {
     standardInput = System.in
+    enableAssertions = true
 }
 
 checkstyle {
