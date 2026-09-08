@@ -5,6 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -15,16 +17,19 @@ public class Eli {
     private static final String DATA_FILE = "duke.txt";
 
     private final TaskList tasks;
+    private final boolean isStorageEnabled;
 
     /** Creates Eli and loads any tasks saved previously. */
     public Eli() {
         tasks = new TaskList();
+        isStorageEnabled = true;
         loadTasks();
     }
 
     /** Creates Eli with an existing task list, primarily for isolated testing. */
     Eli(TaskList tasks) {
         this.tasks = tasks;
+        isStorageEnabled = false;
     }
 
     /** Runs Eli using the original command-line interface. */
@@ -57,6 +62,8 @@ public class Eli {
                 return "Bye. 记得来找我";
             } else if (command.equals("list")) {
                 return getTaskListResponse();
+            } else if (command.equals("sort")) {
+                return getSortResponse();
             } else if (command.equals("find")) {
                 throw new EliException("OOPS!!! The keyword for find cannot be empty.");
             } else if (command.startsWith("find ")) {
@@ -126,6 +133,33 @@ public class Eli {
                 .mapToObj(index -> (index + 1) + "." + tasks.get(index))
                 .collect(Collectors.joining(System.lineSeparator()));
         return matches.isEmpty() ? "No matching tasks found." : matches;
+    }
+
+    /** Sorts and saves the task list, then returns it grouped by task type. */
+    private String getSortResponse() throws EliException {
+        if (tasks.isEmpty()) {
+            return "There are no tasks to sort.";
+        }
+
+        tasks.sortTasks();
+        saveTasks();
+        String sections = Arrays.stream(TaskType.values())
+                .sorted(Comparator.comparingInt(TaskType::getSortOrder))
+                .map(this::formatTaskSection)
+                .filter(section -> !section.isEmpty())
+                .collect(Collectors.joining(System.lineSeparator()));
+        return "Here are your sorted tasks:" + System.lineSeparator() + sections;
+    }
+
+    /** Formats one non-empty task-type section using the list's current numbers. */
+    private String formatTaskSection(TaskType taskType) {
+        String taskLines = IntStream.range(0, tasks.size())
+                .filter(index -> tasks.get(index).getTaskType() == taskType)
+                .mapToObj(index -> (index + 1) + "." + tasks.get(index))
+                .collect(Collectors.joining(System.lineSeparator()));
+        return taskLines.isEmpty()
+                ? ""
+                : taskType.getSectionName() + ":" + System.lineSeparator() + taskLines;
     }
 
     /** Adds a to-do task and returns a confirmation. */
@@ -238,6 +272,10 @@ public class Eli {
 
     /** Saves the current task list to disk. */
     private void saveTasks() throws EliException {
+        if (!isStorageEnabled) {
+            return;
+        }
+
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
             output.writeObject(tasks);
         } catch (IOException exception) {

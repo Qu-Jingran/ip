@@ -42,4 +42,32 @@ public class EliTest {
 
         assertEquals("No matching tasks found.", eli.getResponse("find quiz"));
     }
+
+    @Test
+    public void sort_mixedTasks_returnsSortedSectionsAndReordersTaskList() {
+        TaskList tasks = new TaskList();
+        tasks.addTask(new Todo("write report"));
+        tasks.addTask(new Event("lecture", "2026-09-09 1400", "2026-09-09 1600"));
+        tasks.addTask(new Deadline("submit quiz", "2026-09-10"));
+        Eli eli = new Eli(tasks);
+
+        String expected = "Here are your sorted tasks:"
+                + System.lineSeparator() + "Deadlines:"
+                + System.lineSeparator() + "1.[D][ ] submit quiz (by: Sep 10 2026)"
+                + System.lineSeparator() + "Events:"
+                + System.lineSeparator() + "2.[E][ ] lecture (from: Sep 9 2026, 2:00PM"
+                + " to: Sep 9 2026, 4:00PM)"
+                + System.lineSeparator() + "Todos:"
+                + System.lineSeparator() + "3.[T][ ] write report";
+
+        assertEquals(expected, eli.getResponse("sort"));
+        assertEquals("submit quiz", tasks.get(0).getDescription());
+    }
+
+    @Test
+    public void sort_emptyTaskList_returnsEmptyMessage() {
+        Eli eli = new Eli(new TaskList());
+
+        assertEquals("There are no tasks to sort.", eli.getResponse("sort"));
+    }
 }

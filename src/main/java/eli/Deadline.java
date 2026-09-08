@@ -1,5 +1,8 @@
 package eli;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 /**
  * Represents a task that must be completed by a specified time.
  */
@@ -20,5 +23,10 @@ public class Deadline extends Task {
     @Override
     public String toString() {
         return super.toString() + " (by: " + by + ")";
+    }
+
+    @Override
+    Optional<LocalDateTime> getSortDate() {
+        return TaskDateTimeFormatter.parseDisplayDateOrDateTime(by);
     }
 }

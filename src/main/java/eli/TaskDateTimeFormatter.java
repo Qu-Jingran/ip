@@ -33,6 +33,29 @@ final class TaskDateTimeFormatter {
                 .orElse(value);
     }
 
+    /** Parses a displayed date-time into a value suitable for chronological sorting. */
+    static Optional<LocalDateTime> parseDisplayDateTime(String value) {
+        try {
+            return Optional.of(LocalDateTime.parse(value, OUTPUT_DATE_TIME));
+        } catch (DateTimeParseException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    /** Parses a displayed date or date-time into a chronological sorting value. */
+    static Optional<LocalDateTime> parseDisplayDateOrDateTime(String value) {
+        Optional<LocalDateTime> dateTime = parseDisplayDateTime(value);
+        if (dateTime.isPresent()) {
+            return dateTime;
+        }
+
+        try {
+            return Optional.of(LocalDate.parse(value, OUTPUT_DATE).atStartOfDay());
+        } catch (DateTimeParseException ignored) {
+            return Optional.empty();
+        }
+    }
+
     /** Returns a formatted date-time when the value has the supported input form. */
     private static Optional<String> tryFormatDateTime(String value) {
         try {

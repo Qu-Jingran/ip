@@ -1,5 +1,8 @@
 package eli;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 /**
  * Represents a task that has a start time and an end time.
  */
@@ -23,5 +26,10 @@ public class Event extends Task {
     @Override
     public String toString() {
         return super.toString() + " (from: " + from + " to: " + to + ")";
+    }
+
+    @Override
+    Optional<LocalDateTime> getSortDate() {
+        return TaskDateTimeFormatter.parseDisplayDateTime(from);
     }
 }

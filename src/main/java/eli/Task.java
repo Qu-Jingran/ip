@@ -1,6 +1,8 @@
 package eli;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * Represents a task that can be marked as done or not done.
@@ -40,6 +42,16 @@ public abstract class Task implements Serializable {
     /** Returns the description used to search for this task. */
     public String getDescription() {
         return description;
+    }
+
+    /** Returns this task's type for grouping and sorting. */
+    TaskType getTaskType() {
+        return taskType;
+    }
+
+    /** Returns the task's chronological sort value, if it has a supported date. */
+    Optional<LocalDateTime> getSortDate() {
+        return Optional.empty();
     }
 
     /**
