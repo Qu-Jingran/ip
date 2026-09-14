@@ -403,7 +403,8 @@ public class Eli {
     /** Loads saved tasks, if a save file exists. */
     @SuppressWarnings("unchecked")
     private void loadTasks() {
-        try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(dataFile.toFile()))) {
+        try (FileInputStream fileInput = new FileInputStream(dataFile.toFile());
+                ObjectInputStream input = new ObjectInputStream(fileInput)) {
             tasks.addAll((TaskList) input.readObject());
         } catch (FileNotFoundException exception) {
             // It is normal for the data file not to exist on the first run.
