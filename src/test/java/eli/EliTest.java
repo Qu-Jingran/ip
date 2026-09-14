@@ -9,6 +9,13 @@ import org.junit.jupiter.api.Test;
 /** Tests command responses that operate on an existing task list. */
 public class EliTest {
     @Test
+    public void nullInput_returnsCommandPrompt() {
+        Eli eli = new Eli(new TaskList());
+
+        assertTrue(eli.getResponse(null).contains("Please enter a command."));
+    }
+
+    @Test
     public void blankInput_returnsCommandPrompt() {
         Eli eli = new Eli(new TaskList());
 
@@ -99,6 +106,137 @@ public class EliTest {
 
         assertFalse(response.contains("exact task is already"));
         assertEquals(2, tasks.size());
+    }
+
+    @Test
+    public void exitCommand_recognizesEnglishAndChineseOnly() {
+        Eli eli = new Eli(new TaskList());
+
+        assertTrue(eli.isExitCommand("  bye  "));
+        assertTrue(eli.isExitCommand("再见"));
+        assertFalse(eli.isExitCommand("goodbye"));
+    }
+
+    @Test
+    public void todo_validCommand_addsTaskAndHandlesExtraSpaces() {
+        TaskList tasks = new TaskList();
+        Eli eli = new Eli(tasks);
+
+        String response = eli.getResponse("  todo    read notes  ");
+
+        assertTrue(response.contains("Task captured!"));
+        assertEquals(1, tasks.size());
+        assertEquals("read notes", tasks.get(0).getDescription());
+    }
+
+    @Test
+    public void deadline_validDateAndNaturalLanguage_addTasks() {
+        TaskList tasks = new TaskList();
+        Eli eli = new Eli(tasks);
+
+        String datedResponse = eli.getResponse(
+                "deadline submit report /by 2026-09-18 2359");
+        String naturalResponse = eli.getResponse(
+                "deadline call home /by next Friday");
+
+        assertTrue(datedResponse.contains("Sep 18 2026, 11:59PM"));
+        assertTrue(naturalResponse.contains("next Friday"));
+        assertEquals(2, tasks.size());
+    }
+
+    @Test
+    public void deadline_missingDescriptionOrDate_returnsError() {
+        Eli eli = new Eli(new TaskList());
+
+        assertTrue(eli.getResponse("deadline").contains("needs a description"));
+        assertTrue(eli.getResponse("deadline /by 2026-09-18")
+                .contains("needs a description"));
+        assertTrue(eli.getResponse("deadline submit report")
+                .contains("needs a /by value"));
+        assertTrue(eli.getResponse("deadline submit report /by ")
+                .contains("needs a /by value"));
+    }
+
+    @Test
+    public void event_validDateTimes_addsTask() {
+        TaskList tasks = new TaskList();
+        Eli eli = new Eli(tasks);
+
+        String response = eli.getResponse(
+                "event project meeting /from 2026-09-15 1400 /to 2026-09-15 1600");
+
+        assertTrue(response.contains("Sep 15 2026, 2:00PM"));
+        assertTrue(response.contains("Sep 15 2026, 4:00PM"));
+        assertEquals(1, tasks.size());
+    }
+
+    @Test
+    public void event_missingDescriptionOrTime_returnsError() {
+        Eli eli = new Eli(new TaskList());
+
+        assertTrue(eli.getResponse("event").contains("needs a description"));
+        assertTrue(eli.getResponse(
+                "event /from 2026-09-15 1400 /to 2026-09-15 1600")
+                .contains("needs a description"));
+        assertTrue(eli.getResponse("event project meeting")
+                .contains("needs /from and /to values"));
+        assertTrue(eli.getResponse(
+                "event project meeting /to 2026-09-15 1600 /from 2026-09-15 1400")
+                .contains("needs /from and /to values"));
+    }
+
+    @Test
+    public void markAndUnmark_validTaskNumber_updateStatus() {
+        TaskList tasks = new TaskList();
+        tasks.addTask(new Todo("read notes"));
+        Eli eli = new Eli(tasks);
+
+        String markResponse = eli.getResponse("mark 1");
+        assertTrue(markResponse.contains("Nice work!"));
+        assertEquals("X", tasks.get(0).getStatusIcon());
+
+        String unmarkResponse = eli.getResponse("unmark 1");
+        assertTrue(unmarkResponse.contains("No worries!"));
+        assertEquals(" ", tasks.get(0).getStatusIcon());
+    }
+
+    @Test
+    public void taskNumberCommand_invalidNumber_returnsError() {
+        TaskList tasks = new TaskList();
+        tasks.addTask(new Todo("read notes"));
+        Eli eli = new Eli(tasks);
+
+        assertTrue(eli.getResponse("mark abc").contains("no task with that number"));
+        assertTrue(eli.getResponse("unmark 0").contains("no task with that number"));
+        assertTrue(eli.getResponse("delete 2").contains("no task with that number"));
+    }
+
+    @Test
+    public void delete_validTaskNumber_removesTask() {
+        TaskList tasks = new TaskList();
+        tasks.addTask(new Todo("read notes"));
+        tasks.addTask(new Todo("submit quiz"));
+        Eli eli = new Eli(tasks);
+
+        String response = eli.getResponse("delete 1");
+
+        assertTrue(response.contains("Task cleared!"));
+        assertEquals(1, tasks.size());
+        assertEquals("submit quiz", tasks.get(0).getDescription());
+    }
+
+    @Test
+    public void unknownCommand_returnsHelpfulError() {
+        Eli eli = new Eli(new TaskList());
+
+        assertTrue(eli.getResponse("dance").contains("don't recognize that command"));
+    }
+
+    @Test
+    public void find_missingKeyword_returnsSpecificError() {
+        Eli eli = new Eli(new TaskList());
+
+        assertTrue(eli.getResponse("find").contains("enter a keyword after find"));
     }
 
     @Test
