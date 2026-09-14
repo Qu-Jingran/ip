@@ -1,12 +1,15 @@
 package eli;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -18,6 +21,8 @@ public class Eli {
 
     private final TaskList tasks;
     private final boolean isStorageEnabled;
+    private boolean isStorageUsable = true;
+    private String storageWarning;
 
     /** Creates Eli and loads any tasks saved previously. */
     public Eli() {
@@ -56,6 +61,25 @@ public class Eli {
      * @return Eli's response to the command
      */
     public String getResponse(String input) {
+        String response = getCommandResponse(input);
+        if (storageWarning == null) {
+            return response;
+        }
+
+        String responseWithWarning = storageWarning
+                + System.lineSeparator() + System.lineSeparator() + response;
+        storageWarning = null;
+        return responseWithWarning;
+    }
+
+    /** Executes one command after guarding against missing input. */
+    private String getCommandResponse(String input) {
+        if (input == null || input.isBlank()) {
+            return getErrorMessage(
+                    "Please enter a command.",
+                    "请输入指令。");
+        }
+
         String command = input.trim();
         try {
             if (isExitCommand(command)) {
@@ -90,10 +114,16 @@ public class Eli {
                         "请填写活动名称。"));
             } else if (command.startsWith("event ")) {
                 return addEvent(command);
+            } else if (command.equals("mark")) {
+                throw new EliException(getMissingTaskNumberMessage("mark"));
             } else if (command.startsWith("mark ")) {
                 return updateTaskStatus(command.substring(5), true);
+            } else if (command.equals("unmark")) {
+                throw new EliException(getMissingTaskNumberMessage("unmark"));
             } else if (command.startsWith("unmark ")) {
                 return updateTaskStatus(command.substring(7), false);
+            } else if (command.equals("delete")) {
+                throw new EliException(getMissingTaskNumberMessage("delete"));
             } else if (command.startsWith("delete ")) {
                 return deleteTask(command.substring(7));
             } else {
@@ -214,6 +244,10 @@ public class Eli {
             throw new EliException(getErrorMessage(
                     "A deadline needs a /by value.",
                     "请使用 /by 填写截止时间。"));
+        } else if (byIndex != command.lastIndexOf(" /by ")) {
+            throw new EliException(getErrorMessage(
+                    "Use /by only once in a deadline.",
+                    "每个截止事项只能使用一次 /by。"));
         } else if (byIndex <= 9) {
             throw new EliException(getErrorMessage(
                     "A deadline needs a description.",
@@ -230,6 +264,10 @@ public class Eli {
             throw new EliException(getErrorMessage(
                     "A deadline needs a /by value.",
                     "请使用 /by 填写截止时间。"));
+        } else if (TaskDateTimeFormatter.isInvalidDateOrDateTime(by)) {
+            throw new EliException(getErrorMessage(
+                    "That deadline date is invalid. Use yyyy-MM-dd or yyyy-MM-dd HHmm.",
+                    "截止日期无效。请使用 yyyy-MM-dd 或 yyyy-MM-dd HHmm。"));
         }
         return addTask(new Deadline(description, by));
     }
@@ -242,6 +280,11 @@ public class Eli {
             throw new EliException(getErrorMessage(
                     "An event needs /from and /to values.",
                     "请使用 /from 和 /to 填写活动时间。"));
+        } else if (fromIndex != command.lastIndexOf(" /from ")
+                || toIndex != command.lastIndexOf(" /to ")) {
+            throw new EliException(getErrorMessage(
+                    "Use /from and /to only once in an event.",
+                    "每个活动只能使用一次 /from 和 /to。"));
         } else if (fromIndex <= 6) {
             throw new EliException(getErrorMessage(
                     "An event needs a description.",
@@ -263,12 +306,25 @@ public class Eli {
             throw new EliException(getErrorMessage(
                     "An event needs /from and /to values.",
                     "请使用 /from 和 /to 填写活动时间。"));
+        } else if (TaskDateTimeFormatter.isInvalidDateTime(from)
+                || TaskDateTimeFormatter.isInvalidDateTime(to)) {
+            throw new EliException(getErrorMessage(
+                    "An event date is invalid. Use yyyy-MM-dd HHmm.",
+                    "活动日期无效。请使用 yyyy-MM-dd HHmm。"));
         }
+
+        validateEventOrder(from, to);
         return addTask(new Event(description, from, to));
     }
 
     /** Adds and saves one task. */
     private String addTask(Task task) throws EliException {
+        if (tasks.containsTaskWithSameDetails(task)) {
+            throw new EliException(getErrorMessage(
+                    "That exact task is already in your list.",
+                    "清单中已经有完全相同的任务。"));
+        }
+
         tasks.addTask(task);
         saveTasks();
         String english = "Task captured!\n  " + task
@@ -334,8 +390,15 @@ public class Eli {
     private void loadTasks() {
         try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(DATA_FILE))) {
             tasks.addAll((TaskList) input.readObject());
-        } catch (IOException | ClassNotFoundException exception) {
-            // A missing or unreadable file is treated as an empty task list.
+        } catch (FileNotFoundException exception) {
+            // It is normal for the data file not to exist on the first run.
+        } catch (IOException | ClassNotFoundException | ClassCastException | SecurityException exception) {
+            isStorageUsable = false;
+            storageWarning = getErrorMessage(
+                    "I could not read duke.txt, so I started with an empty list."
+                            + " Fix or remove that file before saving new tasks.",
+                    "无法读取 duke.txt，因此我从空清单开始。"
+                            + "请修复或移除该文件后再保存新任务。");
         }
     }
 
@@ -344,14 +407,37 @@ public class Eli {
         if (!isStorageEnabled) {
             return;
         }
+        if (!isStorageUsable) {
+            throw new EliException(getErrorMessage(
+                    "I cannot save until duke.txt is fixed or removed.",
+                    "修复或移除 duke.txt 后才能保存任务。"));
+        }
 
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
             output.writeObject(tasks);
-        } catch (IOException exception) {
+        } catch (IOException | SecurityException exception) {
             throw new EliException(getErrorMessage(
                     "I could not save your tasks.",
                     "任务保存失败。"));
         }
+    }
+
+    /** Rejects an event whose supported end date-time is not after its start. */
+    private void validateEventOrder(String from, String to) throws EliException {
+        Optional<LocalDateTime> start = TaskDateTimeFormatter.parseInputDateTime(from);
+        Optional<LocalDateTime> end = TaskDateTimeFormatter.parseInputDateTime(to);
+        if (start.isPresent() && end.isPresent() && !start.get().isBefore(end.get())) {
+            throw new EliException(getErrorMessage(
+                    "An event must end after it starts.",
+                    "活动结束时间必须晚于开始时间。"));
+        }
+    }
+
+    /** Builds the error shown when a task-number command has no number. */
+    private String getMissingTaskNumberMessage(String command) {
+        return getErrorMessage(
+                "Please enter a task number after " + command + ".",
+                "请在 " + command + " 后输入任务编号。");
     }
 
     /** Builds a consistent bilingual error response in Eli's friendly voice. */

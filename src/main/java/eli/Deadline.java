@@ -29,4 +29,10 @@ public class Deadline extends Task {
     Optional<LocalDateTime> getSortDate() {
         return TaskDateTimeFormatter.parseDisplayDateOrDateTime(by);
     }
+
+    @Override
+    boolean hasSameDetails(Task other) {
+        return super.hasSameDetails(other)
+                && by.equalsIgnoreCase(((Deadline) other).by);
+    }
 }

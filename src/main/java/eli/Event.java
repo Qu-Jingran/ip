@@ -32,4 +32,11 @@ public class Event extends Task {
     Optional<LocalDateTime> getSortDate() {
         return TaskDateTimeFormatter.parseDisplayDateTime(from);
     }
+
+    @Override
+    boolean hasSameDetails(Task other) {
+        return super.hasSameDetails(other)
+                && from.equalsIgnoreCase(((Event) other).from)
+                && to.equalsIgnoreCase(((Event) other).to);
+    }
 }

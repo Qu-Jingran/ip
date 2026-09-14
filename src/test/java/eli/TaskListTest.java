@@ -35,6 +35,19 @@ public class TaskListTest {
     }
 
     @Test
+    public void containsTaskWithSameDetails_comparesTypeAndTaskDetails() {
+        TaskList tasks = new TaskList();
+        tasks.addTask(new Todo("read notes"));
+        tasks.addTask(new Deadline("submit report", "2026-09-18"));
+
+        assertEquals(true, tasks.containsTaskWithSameDetails(new Todo("READ NOTES")));
+        assertEquals(true, tasks.containsTaskWithSameDetails(
+                new Deadline("submit report", "2026-09-18")));
+        assertEquals(false, tasks.containsTaskWithSameDetails(
+                new Deadline("submit report", "2026-09-19")));
+    }
+
+    @Test
     public void sortTasks_mixedTasks_groupsAndSortsTasks() {
         TaskList tasks = new TaskList();
         tasks.addTask(new Todo("write report"));
