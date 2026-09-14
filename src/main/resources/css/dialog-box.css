@@ -13,10 +13,14 @@
 }
 
 .eli-label {
-    -fx-background-color: #c9866b;
-    -fx-background-radius: 16px 16px 16px 4px;
-    -fx-border-color: #9d624e;
-    -fx-border-radius: 16px 16px 16px 4px;
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-insets: 0;
+    -fx-border-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 10px 8px;
 }
 
 #displayPicture {
