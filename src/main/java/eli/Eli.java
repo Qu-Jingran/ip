@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -17,24 +18,38 @@ import java.util.stream.IntStream;
 /** Runs the Eli task-list application and responds to user commands. */
 public class Eli {
     private static final String DIVIDER = "____________________________________________________________";
-    private static final String DATA_FILE = "duke.txt";
+    private static final Path DEFAULT_DATA_FILE = Path.of("duke.txt");
 
     private final TaskList tasks;
     private final boolean isStorageEnabled;
+    private final Path dataFile;
     private boolean isStorageUsable = true;
     private String storageWarning;
 
     /** Creates Eli and loads any tasks saved previously. */
     public Eli() {
-        tasks = new TaskList();
-        isStorageEnabled = true;
+        this(new TaskList(), DEFAULT_DATA_FILE, true);
         loadTasks();
     }
 
     /** Creates Eli with an existing task list, primarily for isolated testing. */
     Eli(TaskList tasks) {
+        this(tasks, DEFAULT_DATA_FILE, false);
+    }
+
+    /** Creates Eli with storage at a test-controlled path. */
+    Eli(Path dataFile) {
+        this(new TaskList(), dataFile, true);
+        loadTasks();
+    }
+
+    /** Creates Eli with explicit task and storage dependencies. */
+    private Eli(TaskList tasks, Path dataFile, boolean isStorageEnabled) {
+        assert tasks != null : "Task list must not be null";
+        assert dataFile != null : "Data file path must not be null";
         this.tasks = tasks;
-        isStorageEnabled = false;
+        this.dataFile = dataFile;
+        this.isStorageEnabled = isStorageEnabled;
     }
 
     /** Runs Eli using the original command-line interface. */
@@ -388,16 +403,16 @@ public class Eli {
     /** Loads saved tasks, if a save file exists. */
     @SuppressWarnings("unchecked")
     private void loadTasks() {
-        try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(DATA_FILE))) {
+        try (ObjectInputStream input = new ObjectInputStream(new FileInputStream(dataFile.toFile()))) {
             tasks.addAll((TaskList) input.readObject());
         } catch (FileNotFoundException exception) {
             // It is normal for the data file not to exist on the first run.
         } catch (IOException | ClassNotFoundException | ClassCastException | SecurityException exception) {
             isStorageUsable = false;
             storageWarning = getErrorMessage(
-                    "I could not read duke.txt, so I started with an empty list."
+                    "I could not read " + getDataFileName() + ", so I started with an empty list."
                             + " Fix or remove that file before saving new tasks.",
-                    "无法读取 duke.txt，因此我从空清单开始。"
+                    "无法读取 " + getDataFileName() + "，因此我从空清单开始。"
                             + "请修复或移除该文件后再保存新任务。");
         }
     }
@@ -409,17 +424,22 @@ public class Eli {
         }
         if (!isStorageUsable) {
             throw new EliException(getErrorMessage(
-                    "I cannot save until duke.txt is fixed or removed.",
-                    "修复或移除 duke.txt 后才能保存任务。"));
+                    "I cannot save until " + getDataFileName() + " is fixed or removed.",
+                    "修复或移除 " + getDataFileName() + " 后才能保存任务。"));
         }
 
-        try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
+        try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(dataFile.toFile()))) {
             output.writeObject(tasks);
         } catch (IOException | SecurityException exception) {
             throw new EliException(getErrorMessage(
                     "I could not save your tasks.",
                     "任务保存失败。"));
         }
+    }
+
+    /** Returns the user-facing name of the configured storage file. */
+    private String getDataFileName() {
+        return dataFile.getFileName().toString();
     }
 
     /** Rejects an event whose supported end date-time is not after its start. */
