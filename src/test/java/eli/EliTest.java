@@ -14,7 +14,8 @@ public class EliTest {
         Eli eli = new Eli(tasks);
 
         String expected = "Let's see what's on your list!"
-                + System.lineSeparator() + "来看看你的任务清单吧："
+                + System.lineSeparator() + System.lineSeparator()
+                + "来看看你的任务清单吧："
                 + System.lineSeparator() + "1.[T][ ] read notes"
                 + System.lineSeparator() + "2.[T][ ] submit quiz";
 
@@ -30,7 +31,8 @@ public class EliTest {
         Eli eli = new Eli(tasks);
 
         String expected = "I found these tasks!"
-                + System.lineSeparator() + "找到这些任务啦："
+                + System.lineSeparator() + System.lineSeparator()
+                + "找到这些任务啦："
                 + System.lineSeparator() + "1.[T][ ] read notes"
                 + System.lineSeparator() + "3.[T][ ] review notes";
 
@@ -44,7 +46,8 @@ public class EliTest {
         Eli eli = new Eli(tasks);
 
         String expected = "No matching tasks found."
-                + System.lineSeparator() + "没有找到相关任务。";
+                + System.lineSeparator() + System.lineSeparator()
+                + "没有找到相关任务。";
 
         assertEquals(expected, eli.getResponse("find quiz"));
     }
@@ -58,7 +61,8 @@ public class EliTest {
         Eli eli = new Eli(tasks);
 
         String expected = "All sorted and ready!"
-                + System.lineSeparator() + "任务已经排好啦："
+                + System.lineSeparator() + System.lineSeparator()
+                + "任务已经排好啦："
                 + System.lineSeparator() + "Deadlines:"
                 + System.lineSeparator() + "1.[D][ ] submit quiz (by: Sep 10 2026)"
                 + System.lineSeparator() + "Events:"
@@ -76,7 +80,8 @@ public class EliTest {
         Eli eli = new Eli(new TaskList());
 
         String expected = "There are no tasks to sort yet."
-                + System.lineSeparator() + "暂时没有任务可以排序。";
+                + System.lineSeparator() + System.lineSeparator()
+                + "暂时没有任务可以排序。";
 
         assertEquals(expected, eli.getResponse("sort"));
     }
@@ -86,7 +91,8 @@ public class EliTest {
         Eli eli = new Eli(new TaskList());
 
         String expected = "Bye for now!"
-                + System.lineSeparator() + "再见，记得回来找我！";
+                + System.lineSeparator() + System.lineSeparator()
+                + "再见，记得回来找我！";
 
         assertEquals(expected, eli.getResponse("bye"));
     }
