@@ -59,8 +59,9 @@ public class Eli {
         String command = input.trim();
         try {
             if (isExitCommand(command)) {
-                return "Bye for now!" + System.lineSeparator()
-                        + "再见，记得回来找我！";
+                return getBilingualMessage(
+                        "Bye for now!",
+                        "再见，记得回来找我！");
             } else if (command.equals("list")) {
                 return getTaskListResponse();
             } else if (command.equals("sort")) {
@@ -119,10 +120,11 @@ public class Eli {
                 + "|  ___|     | |           | |  \n"
                 + "| |_____    | |_____     _| |_ \n"
                 + "|_______|   |_______|   |_____|\n";
-        return banner + DIVIDER
-                + "\nHello! I'm Eli, your bilingual task buddy."
-                + "\n你好！准备好一起完成任务了吗？\n"
-                + DIVIDER;
+        return banner + DIVIDER + "\n"
+                + getBilingualMessage(
+                        "Hello! I'm Eli, your bilingual task buddy.",
+                        "你好！准备好一起完成任务了吗？")
+                + "\n" + DIVIDER;
     }
 
     /** Returns all currently stored tasks. */
@@ -131,9 +133,13 @@ public class Eli {
                 .mapToObj(index -> (index + 1) + "." + tasks.get(index))
                 .collect(Collectors.joining(System.lineSeparator()));
         return taskLines.isEmpty()
-                ? "Your task list is clear!" + System.lineSeparator() + "任务清单空空如也！"
-                : "Let's see what's on your list!" + System.lineSeparator()
-                        + "来看看你的任务清单吧：" + System.lineSeparator() + taskLines;
+                ? getBilingualMessage(
+                        "Your task list is clear!",
+                        "任务清单空空如也！")
+                : getBilingualMessage(
+                        "Let's see what's on your list!",
+                        "来看看你的任务清单吧：")
+                        + System.lineSeparator() + taskLines;
     }
 
     /** Returns tasks whose descriptions contain the keyword. */
@@ -150,16 +156,21 @@ public class Eli {
                 .mapToObj(index -> (index + 1) + "." + tasks.get(index))
                 .collect(Collectors.joining(System.lineSeparator()));
         return matches.isEmpty()
-                ? "No matching tasks found." + System.lineSeparator() + "没有找到相关任务。"
-                : "I found these tasks!" + System.lineSeparator()
-                        + "找到这些任务啦：" + System.lineSeparator() + matches;
+                ? getBilingualMessage(
+                        "No matching tasks found.",
+                        "没有找到相关任务。")
+                : getBilingualMessage(
+                        "I found these tasks!",
+                        "找到这些任务啦：")
+                        + System.lineSeparator() + matches;
     }
 
     /** Sorts and saves the task list, then returns it grouped by task type. */
     private String getSortResponse() throws EliException {
         if (tasks.isEmpty()) {
-            return "There are no tasks to sort yet." + System.lineSeparator()
-                    + "暂时没有任务可以排序。";
+            return getBilingualMessage(
+                    "There are no tasks to sort yet.",
+                    "暂时没有任务可以排序。");
         }
 
         tasks.sortTasks();
@@ -169,8 +180,10 @@ public class Eli {
                 .map(this::formatTaskSection)
                 .filter(section -> !section.isEmpty())
                 .collect(Collectors.joining(System.lineSeparator()));
-        return "All sorted and ready!" + System.lineSeparator()
-                + "任务已经排好啦：" + System.lineSeparator() + sections;
+        return getBilingualMessage(
+                "All sorted and ready!",
+                "任务已经排好啦：")
+                + System.lineSeparator() + sections;
     }
 
     /** Formats one non-empty task-type section using the list's current numbers. */
@@ -258,9 +271,11 @@ public class Eli {
     private String addTask(Task task) throws EliException {
         tasks.addTask(task);
         saveTasks();
-        return "Task captured! 任务记下来啦：\n  " + task
-                + "\nYou now have " + tasks.size() + " tasks."
-                + " 你现在有 " + tasks.size() + " 个任务。";
+        String english = "Task captured!\n  " + task
+                + "\nYou now have " + tasks.size() + " tasks.";
+        String chinese = "任务记下来啦：\n  " + task
+                + "\n你现在有 " + tasks.size() + " 个任务。";
+        return getBilingualMessage(english, chinese);
     }
 
     /** Marks or unmarks a task and returns a confirmation. */
@@ -276,11 +291,15 @@ public class Eli {
         if (isDone) {
             task.markAsDone();
             saveTasks();
-            return "Nice work! 做得好！\nThis task is now complete:\n  " + task;
+            return getBilingualMessage(
+                    "Nice work!\nThis task is now complete:\n  " + task,
+                    "做得好！\n这个任务已经完成：\n  " + task);
         }
         task.markAsNotDone();
         saveTasks();
-        return "No worries! 没关系！\nThis task is back on your list:\n  " + task;
+        return getBilingualMessage(
+                "No worries!\nThis task is back on your list:\n  " + task,
+                "没关系！\n这个任务已回到清单：\n  " + task);
     }
 
     /** Deletes a task and returns a confirmation. */
@@ -294,9 +313,11 @@ public class Eli {
 
         Task removedTask = tasks.removeTask(taskNumber);
         saveTasks();
-        return "Task cleared! 已删除这个任务：\n  " + removedTask
-                + "\nYou now have " + tasks.size() + " tasks."
-                + " 你现在有 " + tasks.size() + " 个任务。";
+        String english = "Task cleared!\n  " + removedTask
+                + "\nYou now have " + tasks.size() + " tasks.";
+        String chinese = "已删除这个任务：\n  " + removedTask
+                + "\n你现在有 " + tasks.size() + " 个任务。";
+        return getBilingualMessage(english, chinese);
     }
 
     /** Converts task-number text to a number, or returns -1 when it is invalid. */
@@ -335,8 +356,13 @@ public class Eli {
 
     /** Builds a consistent bilingual error response in Eli's friendly voice. */
     private static String getErrorMessage(String english, String chinese) {
-        return "Oops! 哎呀！" + System.lineSeparator()
-                + english + System.lineSeparator()
-                + chinese;
+        return getBilingualMessage(
+                "Oops!" + System.lineSeparator() + english,
+                "哎呀！" + System.lineSeparator() + chinese);
+    }
+
+    /** Places the complete English response before a separate Chinese response. */
+    private static String getBilingualMessage(String english, String chinese) {
+        return english + System.lineSeparator() + System.lineSeparator() + chinese;
     }
 }
