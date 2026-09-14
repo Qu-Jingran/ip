@@ -33,6 +33,29 @@ final class TaskDateTimeFormatter {
                 .orElse(value);
     }
 
+    /** Parses a supported input date-time. */
+    static Optional<LocalDateTime> parseInputDateTime(String value) {
+        try {
+            return Optional.of(LocalDateTime.parse(value, INPUT_DATE_TIME));
+        } catch (DateTimeParseException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    /** Returns whether a date-like value uses a supported shape but is invalid. */
+    static boolean isInvalidDateOrDateTime(String value) {
+        boolean looksLikeDate = value.matches("\\d{4}-\\d{2}-\\d{2}");
+        boolean looksLikeDateTime = value.matches("\\d{4}-\\d{2}-\\d{2} \\d{4}");
+        return looksLikeDate && tryFormatDate(value).isEmpty()
+                || looksLikeDateTime && parseInputDateTime(value).isEmpty();
+    }
+
+    /** Returns whether a date-time-like value has an impossible date or time. */
+    static boolean isInvalidDateTime(String value) {
+        return value.matches("\\d{4}-\\d{2}-\\d{2} \\d{4}")
+                && parseInputDateTime(value).isEmpty();
+    }
+
     /** Parses a displayed date-time into a value suitable for chronological sorting. */
     static Optional<LocalDateTime> parseDisplayDateTime(String value) {
         try {
@@ -58,11 +81,7 @@ final class TaskDateTimeFormatter {
 
     /** Returns a formatted date-time when the value has the supported input form. */
     private static Optional<String> tryFormatDateTime(String value) {
-        try {
-            return Optional.of(LocalDateTime.parse(value, INPUT_DATE_TIME).format(OUTPUT_DATE_TIME));
-        } catch (DateTimeParseException ignored) {
-            return Optional.empty();
-        }
+        return parseInputDateTime(value).map(dateTime -> dateTime.format(OUTPUT_DATE_TIME));
     }
 
     /** Returns a formatted date when the value has the supported input form. */

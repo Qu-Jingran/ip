@@ -54,6 +54,13 @@ public abstract class Task implements Serializable {
         return Optional.empty();
     }
 
+    /** Returns whether another task has the same type and description. */
+    boolean hasSameDetails(Task other) {
+        return other != null
+                && taskType == other.taskType
+                && description.equalsIgnoreCase(other.description);
+    }
+
     /**
      * Returns the icon that shows whether this task is done.
      *

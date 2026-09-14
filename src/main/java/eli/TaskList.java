@@ -37,6 +37,12 @@ public class TaskList extends ArrayList<Task> {
         return taskNumber >= 1 && taskNumber <= size();
     }
 
+    /** Returns whether the list already contains a task with the same details. */
+    public boolean containsTaskWithSameDetails(Task candidate) {
+        assert candidate != null : "Candidate task must not be null";
+        return stream().anyMatch(task -> task.hasSameDetails(candidate));
+    }
+
     /** Sorts tasks by type, supported date, and description. */
     public void sortTasks() {
         sort(TASK_SORT_ORDER);
