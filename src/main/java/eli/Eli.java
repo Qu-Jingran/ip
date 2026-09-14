@@ -59,25 +59,34 @@ public class Eli {
         String command = input.trim();
         try {
             if (isExitCommand(command)) {
-                return "Bye. 记得来找我";
+                return "Bye for now!" + System.lineSeparator()
+                        + "再见，记得回来找我！";
             } else if (command.equals("list")) {
                 return getTaskListResponse();
             } else if (command.equals("sort")) {
                 return getSortResponse();
             } else if (command.equals("find")) {
-                throw new EliException("OOPS!!! The keyword for find cannot be empty.");
+                throw new EliException(getErrorMessage(
+                        "Please enter a keyword after find.",
+                        "请在 find 后输入关键词。"));
             } else if (command.startsWith("find ")) {
                 return getFindResponse(command.substring(5).trim());
             } else if (command.equals("todo")) {
-                throw new EliException("OOPS!!! The description of a todo cannot be empty.");
+                throw new EliException(getErrorMessage(
+                        "A todo needs a description.",
+                        "请填写待办事项。"));
             } else if (command.startsWith("todo ")) {
                 return addTodo(command.substring(5).trim());
             } else if (command.equals("deadline")) {
-                throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+                throw new EliException(getErrorMessage(
+                        "A deadline needs a description.",
+                        "请填写截止事项。"));
             } else if (command.startsWith("deadline ")) {
                 return addDeadline(command);
             } else if (command.equals("event")) {
-                throw new EliException("OOPS!!! The description of an event cannot be empty.");
+                throw new EliException(getErrorMessage(
+                        "An event needs a description.",
+                        "请填写活动名称。"));
             } else if (command.startsWith("event ")) {
                 return addEvent(command);
             } else if (command.startsWith("mark ")) {
@@ -87,7 +96,9 @@ public class Eli {
             } else if (command.startsWith("delete ")) {
                 return deleteTask(command.substring(7));
             } else {
-                throw new EliException("OOPS!!! I'm sorry, but I don't know what that means :-(");
+                throw new EliException(getErrorMessage(
+                        "I don't recognize that command yet.",
+                        "我暂时不认识这个指令。"));
             }
         } catch (EliException exception) {
             return exception.getMessage();
@@ -108,7 +119,10 @@ public class Eli {
                 + "|  ___|     | |           | |  \n"
                 + "| |_____    | |_____     _| |_ \n"
                 + "|_______|   |_______|   |_____|\n";
-        return banner + DIVIDER + "\nHello! I'm Eli.\n你需要什么帮助？\n" + DIVIDER;
+        return banner + DIVIDER
+                + "\nHello! I'm Eli, your bilingual task buddy."
+                + "\n你好！准备好一起完成任务了吗？\n"
+                + DIVIDER;
     }
 
     /** Returns all currently stored tasks. */
@@ -117,14 +131,17 @@ public class Eli {
                 .mapToObj(index -> (index + 1) + "." + tasks.get(index))
                 .collect(Collectors.joining(System.lineSeparator()));
         return taskLines.isEmpty()
-                ? "Here are the tasks in your list:"
-                : "Here are the tasks in your list:" + System.lineSeparator() + taskLines;
+                ? "Your task list is clear!" + System.lineSeparator() + "任务清单空空如也！"
+                : "Let's see what's on your list!" + System.lineSeparator()
+                        + "来看看你的任务清单吧：" + System.lineSeparator() + taskLines;
     }
 
     /** Returns tasks whose descriptions contain the keyword. */
     private String getFindResponse(String keyword) throws EliException {
         if (keyword.isEmpty()) {
-            throw new EliException("OOPS!!! The keyword for find cannot be empty.");
+            throw new EliException(getErrorMessage(
+                    "Please enter a keyword after find.",
+                    "请在 find 后输入关键词。"));
         }
 
         String searchTerm = keyword.toLowerCase();
@@ -132,13 +149,17 @@ public class Eli {
                 .filter(index -> tasks.get(index).getDescription().toLowerCase().contains(searchTerm))
                 .mapToObj(index -> (index + 1) + "." + tasks.get(index))
                 .collect(Collectors.joining(System.lineSeparator()));
-        return matches.isEmpty() ? "No matching tasks found." : matches;
+        return matches.isEmpty()
+                ? "No matching tasks found." + System.lineSeparator() + "没有找到相关任务。"
+                : "I found these tasks!" + System.lineSeparator()
+                        + "找到这些任务啦：" + System.lineSeparator() + matches;
     }
 
     /** Sorts and saves the task list, then returns it grouped by task type. */
     private String getSortResponse() throws EliException {
         if (tasks.isEmpty()) {
-            return "There are no tasks to sort.";
+            return "There are no tasks to sort yet." + System.lineSeparator()
+                    + "暂时没有任务可以排序。";
         }
 
         tasks.sortTasks();
@@ -148,7 +169,8 @@ public class Eli {
                 .map(this::formatTaskSection)
                 .filter(section -> !section.isEmpty())
                 .collect(Collectors.joining(System.lineSeparator()));
-        return "Here are your sorted tasks:" + System.lineSeparator() + sections;
+        return "All sorted and ready!" + System.lineSeparator()
+                + "任务已经排好啦：" + System.lineSeparator() + sections;
     }
 
     /** Formats one non-empty task-type section using the list's current numbers. */
@@ -165,7 +187,9 @@ public class Eli {
     /** Adds a to-do task and returns a confirmation. */
     private String addTodo(String description) throws EliException {
         if (description.isEmpty()) {
-            throw new EliException("OOPS!!! The description of a todo cannot be empty.");
+            throw new EliException(getErrorMessage(
+                    "A todo needs a description.",
+                    "请填写待办事项。"));
         }
         return addTask(new Todo(description));
     }
@@ -174,17 +198,25 @@ public class Eli {
     private String addDeadline(String command) throws EliException {
         int byIndex = command.indexOf(" /by ");
         if (byIndex == -1) {
-            throw new EliException("OOPS!!! A deadline needs a /by value.");
+            throw new EliException(getErrorMessage(
+                    "A deadline needs a /by value.",
+                    "请使用 /by 填写截止时间。"));
         } else if (byIndex <= 9) {
-            throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+            throw new EliException(getErrorMessage(
+                    "A deadline needs a description.",
+                    "请填写截止事项。"));
         }
 
         String description = command.substring(9, byIndex).trim();
         String by = command.substring(byIndex + 5).trim();
         if (description.isEmpty()) {
-            throw new EliException("OOPS!!! The description of a deadline cannot be empty.");
+            throw new EliException(getErrorMessage(
+                    "A deadline needs a description.",
+                    "请填写截止事项。"));
         } else if (by.isEmpty()) {
-            throw new EliException("OOPS!!! A deadline needs a /by value.");
+            throw new EliException(getErrorMessage(
+                    "A deadline needs a /by value.",
+                    "请使用 /by 填写截止时间。"));
         }
         return addTask(new Deadline(description, by));
     }
@@ -194,20 +226,30 @@ public class Eli {
         int fromIndex = command.indexOf(" /from ");
         int toIndex = command.indexOf(" /to ");
         if (fromIndex == -1 || toIndex == -1 || fromIndex > toIndex) {
-            throw new EliException("OOPS!!! An event needs /from and /to values.");
+            throw new EliException(getErrorMessage(
+                    "An event needs /from and /to values.",
+                    "请使用 /from 和 /to 填写活动时间。"));
         } else if (fromIndex <= 6) {
-            throw new EliException("OOPS!!! The description of an event cannot be empty.");
+            throw new EliException(getErrorMessage(
+                    "An event needs a description.",
+                    "请填写活动名称。"));
         } else if (toIndex < fromIndex + 7) {
-            throw new EliException("OOPS!!! An event needs /from and /to values.");
+            throw new EliException(getErrorMessage(
+                    "An event needs /from and /to values.",
+                    "请使用 /from 和 /to 填写活动时间。"));
         }
 
         String description = command.substring(6, fromIndex).trim();
         String from = command.substring(fromIndex + 7, toIndex).trim();
         String to = command.substring(toIndex + 5).trim();
         if (description.isEmpty()) {
-            throw new EliException("OOPS!!! The description of an event cannot be empty.");
+            throw new EliException(getErrorMessage(
+                    "An event needs a description.",
+                    "请填写活动名称。"));
         } else if (from.isEmpty() || to.isEmpty()) {
-            throw new EliException("OOPS!!! An event needs /from and /to values.");
+            throw new EliException(getErrorMessage(
+                    "An event needs /from and /to values.",
+                    "请使用 /from 和 /to 填写活动时间。"));
         }
         return addTask(new Event(description, from, to));
     }
@@ -216,39 +258,45 @@ public class Eli {
     private String addTask(Task task) throws EliException {
         tasks.addTask(task);
         saveTasks();
-        return "Got it. I've added this task:\n  " + task
-                + "\nNow you have " + tasks.size() + " tasks in the list.";
+        return "Task captured! 任务记下来啦：\n  " + task
+                + "\nYou now have " + tasks.size() + " tasks."
+                + " 你现在有 " + tasks.size() + " 个任务。";
     }
 
     /** Marks or unmarks a task and returns a confirmation. */
     private String updateTaskStatus(String numberText, boolean isDone) throws EliException {
         int taskNumber = parseTaskNumber(numberText);
         if (!tasks.hasTaskNumber(taskNumber)) {
-            throw new EliException("OOPS!!! We don't have a task with that number.");
+            throw new EliException(getErrorMessage(
+                    "There is no task with that number.",
+                    "没有这个编号的任务。"));
         }
 
         Task task = tasks.getTask(taskNumber);
         if (isDone) {
             task.markAsDone();
             saveTasks();
-            return "Nice! I've marked this task as done:\n  " + task;
+            return "Nice work! 做得好！\nThis task is now complete:\n  " + task;
         }
         task.markAsNotDone();
         saveTasks();
-        return "OK, I've marked this task as not done yet:\n  " + task;
+        return "No worries! 没关系！\nThis task is back on your list:\n  " + task;
     }
 
     /** Deletes a task and returns a confirmation. */
     private String deleteTask(String numberText) throws EliException {
         int taskNumber = parseTaskNumber(numberText);
         if (!tasks.hasTaskNumber(taskNumber)) {
-            throw new EliException("OOPS!!! We don't have a task with that number.");
+            throw new EliException(getErrorMessage(
+                    "There is no task with that number.",
+                    "没有这个编号的任务。"));
         }
 
         Task removedTask = tasks.removeTask(taskNumber);
         saveTasks();
-        return "Noted. I've removed this task:\n  " + removedTask
-                + "\nNow you have " + tasks.size() + " tasks in the list.";
+        return "Task cleared! 已删除这个任务：\n  " + removedTask
+                + "\nYou now have " + tasks.size() + " tasks."
+                + " 你现在有 " + tasks.size() + " 个任务。";
     }
 
     /** Converts task-number text to a number, or returns -1 when it is invalid. */
@@ -279,7 +327,16 @@ public class Eli {
         try (ObjectOutputStream output = new ObjectOutputStream(new FileOutputStream(DATA_FILE))) {
             output.writeObject(tasks);
         } catch (IOException exception) {
-            throw new EliException("OOPS!!! Could not save your tasks.");
+            throw new EliException(getErrorMessage(
+                    "I could not save your tasks.",
+                    "任务保存失败。"));
         }
+    }
+
+    /** Builds a consistent bilingual error response in Eli's friendly voice. */
+    private static String getErrorMessage(String english, String chinese) {
+        return "Oops! 哎呀！" + System.lineSeparator()
+                + english + System.lineSeparator()
+                + chinese;
     }
 }

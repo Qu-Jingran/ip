@@ -4,7 +4,8 @@
 
 // Product screenshot goes here
 
-// Product intro goes here
+Eli is a fun, friendly bilingual task companion that responds in English and
+Chinese while helping you keep track of todos, deadlines, and events.
 
 ## Adding deadlines
 
